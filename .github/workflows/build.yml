@@ -23,6 +23,9 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      - name: Decode signing key
+        run: base64 -d signing/masrofy.keystore.b64 > signing/masrofy.keystore
+
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon
 

@@ -529,7 +529,7 @@ fun InvoiceEditor(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { ScreenBar(if (existing == null) "فاتورة جديدة" else "تعديل الفاتورة", onBack) }
     ) { pad ->
         Column(
@@ -730,7 +730,7 @@ fun InvoiceView(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             ScreenBar(inv.number, onBack) {
                 IconButton(onClick = onEdit) {

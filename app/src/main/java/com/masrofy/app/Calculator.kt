@@ -206,7 +206,7 @@ fun CalculatorScreen(onBack: () -> Unit, onUseAmount: (Double) -> Unit) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { ScreenBar("الحاسبة", onBack) }
     ) { pad ->
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {

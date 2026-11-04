@@ -392,7 +392,7 @@ fun RecurringScreen(store: Store, onBack: () -> Unit, onChanged: () -> Unit) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { ScreenBar("العمليات المتكررة", onBack) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -630,7 +630,7 @@ fun CategoryBudgetsScreen(store: Store, txs: List<Tx>, onBack: () -> Unit, onCha
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { ScreenBar("ميزانيات الفئات", onBack) }
     ) { pad ->
         LazyColumn(
@@ -749,7 +749,7 @@ fun ClientsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { ScreenBar("العملاء", onBack) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -942,7 +942,7 @@ fun BackupScreen(store: Store, invStore: InvoiceStore, onBack: () -> Unit, onRes
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { ScreenBar("النسخ الاحتياطي", onBack) }
     ) { pad ->
         Column(

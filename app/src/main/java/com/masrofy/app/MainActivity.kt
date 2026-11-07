@@ -10,6 +10,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,23 +35,32 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.AttachFile
+import androidx.compose.material.icons.rounded.Calculate
+import androidx.compose.material.icons.rounded.CardGiftcard
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.DirectionsBus
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Flight
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.LocalCafe
 import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material.icons.rounded.Receipt
 import androidx.compose.material.icons.rounded.Restaurant
@@ -97,6 +109,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -121,7 +134,8 @@ data class Tx(
     val category: String,
     val isIncome: Boolean,
     val createdAt: Long,
-    val ref: String = ""
+    val ref: String = "",
+    val photo: String = ""
 )
 
 class Store(context: Context) {
@@ -147,7 +161,8 @@ class Store(context: Context) {
                         category = o.getString("category"),
                         isIncome = o.getBoolean("isIncome"),
                         createdAt = o.getLong("createdAt"),
-                        ref = o.optString("ref", "")
+                        ref = o.optString("ref", ""),
+                        photo = o.optString("photo", "")
                     )
                 )
             }
@@ -169,6 +184,7 @@ class Store(context: Context) {
                     .put("isIncome", t.isIncome)
                     .put("createdAt", t.createdAt)
                     .put("ref", t.ref)
+                    .put("photo", t.photo)
             )
         }
         prefs.edit().putString("tx", arr.toString()).apply()
@@ -183,6 +199,10 @@ enum class Cat(val key: String, val label: String, val icon: ImageVector, val co
     FUN("fun", "ترفيه", Icons.Rounded.SportsEsports, Color(0xFF8A63D2)),
     HEALTH("health", "صحة", Icons.Rounded.Favorite, Color(0xFFD8512D)),
     EDUCATION("education", "تعليم", Icons.Rounded.School, Color(0xFF5B8C2A)),
+    CAFE("cafe", "كافيه", Icons.Rounded.LocalCafe, Color(0xFFA8741A)),
+    GIFTS("gifts", "هدايا", Icons.Rounded.CardGiftcard, Color(0xFFD94A7E)),
+    PHONE("phone", "اتصالات", Icons.Rounded.PhoneAndroid, Color(0xFF4F6BDB)),
+    TRAVEL("travel", "سفر", Icons.Rounded.Flight, Color(0xFF2A9BD1)),
     OTHER("other", "أخرى", Icons.Rounded.MoreHoriz, Color(0xFF6B7C76));
 
     companion object {
@@ -280,6 +300,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val store = Store(applicationContext)
         val invStore = InvoiceStore(applicationContext)
+        Reminders.schedule(applicationContext)
         setContent {
             MasrofyTheme {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -317,8 +338,15 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
     var invScreen by remember { mutableStateOf<InvScreen?>(null) }
     var moreScreen by rememberSaveable { mutableStateOf("") }
     var showBiz by remember { mutableStateOf(false) }
+    var goals by remember { mutableStateOf(loadGoals(store)) }
+    var userName by remember { mutableStateOf(store.prefs.getString("user_name", "") ?: "") }
+    var showName by remember { mutableStateOf(false) }
+    var sheetIncome by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     fun reloadAll() {
+        goals = loadGoals(store)
+        userName = store.prefs.getString("user_name", "") ?: ""
         items = applyRecurring(store)
         budget = store.budget
         catBudgets = loadCatBudgets(store)
@@ -367,10 +395,20 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     prefill = v
                     editingTx = null
                     showSheet = true
+                    sheetIncome = false
                     tab = 0
                     moreScreen = ""
                 }
             )
+            "goals" -> GoalsScreen(
+                goals = goals,
+                onBack = { moreScreen = "" },
+                onSave = {
+                    goals = it
+                    saveGoals(store, it)
+                }
+            )
+            "notif" -> NotificationsScreen(onBack = { moreScreen = "" })
             "rec" -> RecurringScreen(
                 store = store,
                 onBack = { moreScreen = "" },
@@ -510,6 +548,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                         onClick = {
                             editingTx = null
                             prefill = null
+                            sheetIncome = false
                             showSheet = true
                         },
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -528,6 +567,22 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     onMonthChange = { monthOffset = it },
                     budget = budget,
                     catBudgets = catBudgets,
+                    userName = userName,
+                    goals = goals,
+                    onEditName = { showName = true },
+                    onQuickAdd = { income ->
+                        editingTx = null
+                        prefill = null
+                        sheetIncome = income
+                        showSheet = true
+                    },
+                    onNewInvoice = {
+                        tab = 1
+                        invScreen = InvScreen.Edit(null)
+                    },
+                    onOpenCalc = { moreScreen = "calc" },
+                    onOpenNotif = { moreScreen = "notif" },
+                    onOpenGoals = { moreScreen = "goals" },
                     onSetBudget = { value ->
                         budget = value
                         store.budget = value
@@ -538,6 +593,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                         showSheet = true
                     },
                     onDelete = { tx ->
+                        Receipts.delete(context, tx.photo)
                         items = items.filter { it.id != tx.id }
                         store.save(items)
                     },
@@ -575,7 +631,10 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                 AddSheet(
                     initial = editingTx,
                     prefillAmount = prefill,
+                    initialIncome = sheetIncome,
                     onSave = { tx ->
+                        val old = items.firstOrNull { it.id == tx.id }
+                        if (old != null && old.photo != tx.photo) Receipts.delete(context, old.photo)
                         val exists = items.any { it.id == tx.id }
                         items = (if (exists) items.map { if (it.id == tx.id) tx else it } else listOf(tx) + items)
                             .sortedByDescending { it.createdAt }
@@ -585,6 +644,18 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     }
                 )
             }
+        }
+
+        if (showName) {
+            NameDialog(
+                current = userName,
+                onDismiss = { showName = false },
+                onSave = {
+                    userName = it
+                    store.prefs.edit().putString("user_name", it).apply()
+                    showName = false
+                }
+            )
         }
 
         if (showBiz) {
@@ -631,6 +702,14 @@ fun HomeScreen(
     onMonthChange: (Int) -> Unit,
     budget: Double,
     catBudgets: Map<String, Double>,
+    userName: String,
+    goals: List<Goal>,
+    onEditName: () -> Unit,
+    onQuickAdd: (Boolean) -> Unit,
+    onNewInvoice: () -> Unit,
+    onOpenCalc: () -> Unit,
+    onOpenNotif: () -> Unit,
+    onOpenGoals: () -> Unit,
     onSetBudget: (Double) -> Unit,
     onEdit: (Tx) -> Unit,
     onDelete: (Tx) -> Unit,
@@ -671,23 +750,30 @@ fun HomeScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        item {
-            Column {
-                Text(
-                    "أهلاً بيك",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    "مصروفي",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+        item { HomeHeader(userName, onEditName, onOpenNotif) }
         item { MonthNav(monthOffset, onMonthChange) }
         item { BalanceCard(income - spent, monthIncome, monthSpent) }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.weight(1f)) {
+                    QuickAction("مصروف", Icons.Rounded.ArrowUpward, MaterialTheme.colorScheme.error) { onQuickAdd(false) }
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    QuickAction("دخل", Icons.Rounded.ArrowDownward, incomeColor()) { onQuickAdd(true) }
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    QuickAction("فاتورة", Icons.Rounded.Receipt, Color(0xFF3B82C4)) { onNewInvoice() }
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    QuickAction("حاسبة", Icons.Rounded.Calculate, MaterialTheme.colorScheme.primary) { onOpenCalc() }
+                }
+            }
+        }
         item { BudgetCard(budget, monthSpent) { editBudget = true } }
+        item { WeekCard(txs) }
+        if (goals.isNotEmpty()) {
+            item { GoalsHomeCard(goals, onOpenGoals) }
+        }
         if (overs.isNotEmpty()) {
             item {
                 Row(
@@ -810,6 +896,203 @@ fun HomeScreen(
             }
         )
     }
+}
+
+@Composable
+private fun HomeHeader(userName: String, onEditName: () -> Unit, onOpenNotif: () -> Unit) {
+    val hour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
+    val greeting = if (hour < 12) "صباح الخير" else if (hour < 17) "نهارك سعيد" else "مساء الخير"
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Surface(
+            onClick = onEditName,
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(44.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    if (userName.isBlank()) "م" else userName.take(1),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                greeting,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                if (userName.isBlank()) "أهلاً بيك" else "أهلاً يا " + userName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Surface(
+            onClick = onOpenNotif,
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.size(42.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Rounded.Notifications,
+                    contentDescription = "التنبيهات",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickAction(label: String, icon: ImageVector, tint: Color, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(tint.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+            }
+            Text(label, style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+@Composable
+private fun WeekCard(txs: List<Tx>) {
+    val letters = remember { arrayOf("ح", "ن", "ث", "ر", "خ", "ج", "س") }
+    val days = remember(txs) {
+        val base = Calendar.getInstance()
+        base.set(Calendar.HOUR_OF_DAY, 0)
+        base.set(Calendar.MINUTE, 0)
+        base.set(Calendar.SECOND, 0)
+        base.set(Calendar.MILLISECOND, 0)
+        val list = ArrayList<Pair<String, Double>>()
+        for (i in 6 downTo 0) {
+            val c = base.clone() as Calendar
+            c.add(Calendar.DAY_OF_YEAR, -i)
+            val start = c.timeInMillis
+            val e = c.clone() as Calendar
+            e.add(Calendar.DAY_OF_YEAR, 1)
+            val end = e.timeInMillis
+            val sum = txs.filter { !it.isIncome && it.createdAt >= start && it.createdAt < end }.sumOf { it.amount }
+            list.add(Pair(letters[c.get(Calendar.DAY_OF_WEEK) - 1], sum))
+        }
+        list
+    }
+    val maxV = days.maxOf { it.second }
+    val total = days.sumOf { it.second }
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("آخر 7 أيام", fontWeight = FontWeight.SemiBold)
+                Text(
+                    "صرفت " + money(total) + " ج.م",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(92.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                days.forEachIndexed { index, d ->
+                    WeekBar(
+                        label = d.first,
+                        fraction = if (maxV > 0) (d.second / maxV).toFloat() else 0f,
+                        today = index == days.size - 1,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeekBar(label: String, fraction: Float, today: Boolean, modifier: Modifier) {
+    val animated by animateFloatAsState(
+        targetValue = fraction.coerceIn(0.05f, 1f),
+        animationSpec = tween(700),
+        label = "bar"
+    )
+    Column(
+        modifier = modifier.fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(animated)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(
+                        if (today) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.primaryContainer
+                    )
+            )
+        }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (today) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun NameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var text by remember { mutableStateOf(current) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("اسمك") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { if (it.length <= 20) text = it },
+                label = { Text("هنناديك بيه في الرئيسية") },
+                singleLine = true
+            )
+        },
+        confirmButton = { TextButton(onClick = { onSave(text.trim()) }) { Text("حفظ") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
+    )
 }
 
 @Composable
@@ -1026,12 +1309,24 @@ private fun TxRow(tx: Tx, onClick: () -> Unit, onDeleteClick: () -> Unit) {
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    tx.title,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        tx.title,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (tx.photo.isNotBlank()) {
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            Icons.Rounded.AttachFile,
+                            contentDescription = "مرفق صورة",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
                 Text(
                     "${if (tx.isIncome) "دخل" else cat.label} · $date$tag",
                     style = MaterialTheme.typography.bodySmall,
@@ -1251,8 +1546,16 @@ private fun CategoryRow(cat: Cat, value: Double, total: Double, largest: Double,
 /* ---------------- إضافة وتعديل عملية ---------------- */
 
 @Composable
-fun AddSheet(initial: Tx?, onSave: (Tx) -> Unit, prefillAmount: Double? = null) {
-    var isIncome by remember { mutableStateOf(initial?.isIncome ?: false) }
+fun AddSheet(
+    initial: Tx?,
+    onSave: (Tx) -> Unit,
+    prefillAmount: Double? = null,
+    initialIncome: Boolean = false
+) {
+    val context = LocalContext.current
+    val newId = remember { System.currentTimeMillis() }
+    var photo by remember { mutableStateOf(initial?.photo ?: "") }
+    var isIncome by remember { mutableStateOf(initial?.isIncome ?: initialIncome) }
     var amountText by remember {
         mutableStateOf(
             if (initial != null) money(initial.amount).replace(",", "")
@@ -1271,6 +1574,7 @@ fun AddSheet(initial: Tx?, onSave: (Tx) -> Unit, prefillAmount: Double? = null) 
             .fillMaxWidth()
             .navigationBarsPadding()
             .imePadding()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
             .padding(bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1319,22 +1623,28 @@ fun AddSheet(initial: Tx?, onSave: (Tx) -> Unit, prefillAmount: Double? = null) 
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Cat.entries.forEach { item ->
-                    FilterChip(
-                        selected = cat == item,
-                        onClick = { cat = item },
-                        label = { Text(item.label) },
-                        leadingIcon = {
-                            Icon(item.icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Cat.entries.chunked(4).forEach { rowItems ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        rowItems.forEach { item ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                CatTile(item, cat == item) { cat = item }
+                            }
                         }
-                    )
+                        repeat(4 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
         }
+
+        PhotoSection(
+            photo = photo,
+            key = initial?.id ?: newId,
+            onChange = { name ->
+                if (photo.isNotBlank() && photo != (initial?.photo ?: "")) Receipts.delete(context, photo)
+                photo = name
+            }
+        )
 
         Button(
             onClick = {
@@ -1344,13 +1654,14 @@ fun AddSheet(initial: Tx?, onSave: (Tx) -> Unit, prefillAmount: Double? = null) 
                     val finalTitle = title.trim().ifBlank { if (isIncome) "دخل" else finalCat.label }
                     onSave(
                         Tx(
-                            id = initial?.id ?: now,
+                            id = initial?.id ?: newId,
                             title = finalTitle,
                             amount = amount,
                             category = finalCat.key,
                             isIncome = isIncome,
                             createdAt = initial?.createdAt ?: now,
-                            ref = initial?.ref ?: ""
+                            ref = initial?.ref ?: "",
+                            photo = photo
                         )
                     )
                 }
@@ -1364,6 +1675,41 @@ fun AddSheet(initial: Tx?, onSave: (Tx) -> Unit, prefillAmount: Double? = null) 
             Text(
                 if (initial != null) "حفظ التعديل" else if (isIncome) "حفظ الدخل" else "حفظ المصروف",
                 fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun CatTile(cat: Cat, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) cat.color.copy(alpha = 0.14f) else Color.Transparent,
+        border = BorderStroke(1.5.dp, if (selected) cat.color else Color.Transparent),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(cat.color.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(cat.icon, contentDescription = null, tint = cat.color, modifier = Modifier.size(20.dp))
+            }
+            Text(
+                cat.label,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

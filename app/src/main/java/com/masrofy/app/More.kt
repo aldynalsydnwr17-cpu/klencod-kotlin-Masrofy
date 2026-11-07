@@ -39,6 +39,8 @@ import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.People
 import androidx.compose.material.icons.rounded.Savings
@@ -311,6 +313,12 @@ fun MoreScreen(onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
         }
         item {
             MoreItem(
+                Icons.Rounded.Flag, Color(0xFF17935F), "أهداف الادخار",
+                "حدد هدف وتابع تقدمك لحد ما توصله"
+            ) { onOpen("goals") }
+        }
+        item {
+            MoreItem(
                 Icons.Rounded.Autorenew, Color(0xFF3B82C4), "العمليات المتكررة",
                 "إيجار واشتراكات ومرتب بتتسجل لوحدها كل شهر"
             ) { onOpen("rec") }
@@ -326,6 +334,12 @@ fun MoreScreen(onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
                 Icons.Rounded.People, Color(0xFF8A63D2), "العملاء",
                 "عملاءك المحفوظين لإنشاء الفواتير أسرع"
             ) { onOpen("clients") }
+        }
+        item {
+            MoreItem(
+                Icons.Rounded.Notifications, Color(0xFFE0568A), "التنبيهات",
+                "تذكير يومي بتسجيل مصروفاتك"
+            ) { onOpen("notif") }
         }
         item {
             MoreItem(
@@ -987,7 +1001,7 @@ fun BackupScreen(store: Store, invStore: InvoiceStore, onBack: () -> Unit, onRes
                 Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("حفظ نسخة", fontWeight = FontWeight.Bold)
                     Text(
-                        "هنعمل ملف فيه كل بياناتك، ابعته لنفسك على واتساب أو احفظه في درايف.",
+                        "هنعمل ملف فيه كل بياناتك (من غير صور الإيصالات)، ابعته لنفسك على واتساب أو احفظه في درايف.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

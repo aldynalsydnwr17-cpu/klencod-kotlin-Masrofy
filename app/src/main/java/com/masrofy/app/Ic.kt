@@ -16,7 +16,7 @@ object Ic {
             b.addPath(
                 pathData = PathParser().parsePathString(p).toNodes(),
                 stroke = SolidColor(Color.Black),
-                strokeLineWidth = 1.8f,
+                strokeLineWidth = 1.6f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             )
@@ -40,8 +40,8 @@ object Ic {
 
     val Receipt: ImageVector by lazy {
         make("Receipt",
-            "M6 3h12v18l-3-2-3 2-3-2-3 2z",
-            "M9 8h6M9 12h6"
+            "M6 4l1.5 1L9 4l1.5 1L12 4l1.5 1L15 4l1.5 1L18 4v16H6z",
+            "M9 9h6M9 12h6M9 15h6"
         )
     }
 
@@ -67,8 +67,12 @@ object Ic {
 
     val Bus: ImageVector by lazy {
         make("Bus",
-            "M8 4H16a3 3 0 0 1 3 3V14a3 3 0 0 1 -3 3H8a3 3 0 0 1 -3 -3V7a3 3 0 0 1 3 -3z",
-            "M5 11h14M8 20v-3M16 20v-3M8.5 14h.01M15.5 14h.01"
+            "M5 4h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z",
+            "M4 11h16",
+            "M7 18v2.5M17 18v2.5",
+            "M8 7.5h8",
+            "M7.3 14.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0z",
+            "M15.3 14.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0z"
         )
     }
 
@@ -147,8 +151,10 @@ object Ic {
 
     val Cafe: ImageVector by lazy {
         make("Cafe",
-            "M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z",
-            "M16 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2"
+            "M5 9h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z",
+            "M16 10.5h1.5a2 2 0 0 1 0 4H16",
+            "M4 21h14",
+            "M8 3.5c-.8 1 .8 1.5 0 2.5M12 3.5c-.8 1 .8 1.5 0 2.5"
         )
     }
 
@@ -224,7 +230,8 @@ object Ic {
         make("Target",
             "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z",
             "M7 12a5 5 0 1 0 10 0a5 5 0 1 0 -10 0z",
-            "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z"
+            "M12 12l7-7",
+            "M16 4v3.5h3.5"
         )
     }
 
@@ -243,7 +250,10 @@ object Ic {
 
     val Repeat: ImageVector by lazy {
         make("Repeat",
-            "M4 11V9a3 3 0 0 1 3-3h11l-3-3M20 13v2a3 3 0 0 1-3 3H6l3 3"
+            "M20 12a8 8 0 0 1-13.5 5.8",
+            "M4 12a8 8 0 0 1 13.5-5.8",
+            "M17.5 3v3.5H14",
+            "M6.5 21v-3.5H10"
         )
     }
 
@@ -319,8 +329,8 @@ object Ic {
 
     val Lock: ImageVector by lazy {
         make("Lock",
-            "M7.5 11H16.5a2.5 2.5 0 0 1 2.5 2.5V18.5a2.5 2.5 0 0 1 -2.5 2.5H7.5a2.5 2.5 0 0 1 -2.5 -2.5V13.5a2.5 2.5 0 0 1 2.5 -2.5z",
-            "M8 11V8a4 4 0 0 1 8 0v3"
+            "M5 11h14v10H5z",
+            "M8 11V7a4 4 0 0 1 7.5-1.5"
         )
     }
 
@@ -328,6 +338,14 @@ object Ic {
         make("HeartPulse",
             "M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z",
             "M7 11h3l1.5-3 2 5 1.5-2H17"
+        )
+    }
+
+    val Cart: ImageVector by lazy {
+        make("Cart",
+            "M3 4h2.5l2.2 11h10.3l2-8H6.5",
+            "M7.8 19.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z",
+            "M15.8 19.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z"
         )
     }
 }

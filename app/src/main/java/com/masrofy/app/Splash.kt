@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -69,7 +67,7 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0E7C66), Color(0xFF0A4F57)))),
+            .background(Brush.verticalGradient(listOf(Color(0xFF0FA968), Color(0xFF0B6B4B)))),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -116,7 +114,7 @@ fun SplashScreen(onFinished: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Rounded.AccountBalanceWallet,
+                        Ic.Wallet,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(58.dp)

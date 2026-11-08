@@ -3,6 +3,19 @@
 package com.masrofy.app
 
 import android.content.Context
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.core.view.WindowCompat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -14,6 +27,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,35 +54,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountBalanceWallet
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.AttachFile
-import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.CardGiftcard
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.DirectionsBus
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Flight
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.KeyboardArrowLeft
-import androidx.compose.material.icons.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.LocalCafe
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.PieChart
-import androidx.compose.material.icons.rounded.Receipt
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.School
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Warning
-import androidx.compose.material.icons.rounded.ShoppingBag
-import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -192,18 +177,18 @@ class Store(context: Context) {
 }
 
 enum class Cat(val key: String, val label: String, val icon: ImageVector, val color: Color) {
-    FOOD("food", "أكل وشرب", Icons.Rounded.Restaurant, Color(0xFFF2A33A)),
-    SHOPPING("shopping", "تسوق", Icons.Rounded.ShoppingBag, Color(0xFFE0568A)),
-    BILLS("bills", "فواتير", Icons.Rounded.Receipt, Color(0xFF3B82C4)),
-    TRANSPORT("transport", "مواصلات", Icons.Rounded.DirectionsBus, Color(0xFF0E9AA7)),
-    FUN("fun", "ترفيه", Icons.Rounded.SportsEsports, Color(0xFF8A63D2)),
-    HEALTH("health", "صحة", Icons.Rounded.Favorite, Color(0xFFD8512D)),
-    EDUCATION("education", "تعليم", Icons.Rounded.School, Color(0xFF5B8C2A)),
-    CAFE("cafe", "كافيه", Icons.Rounded.LocalCafe, Color(0xFFA8741A)),
-    GIFTS("gifts", "هدايا", Icons.Rounded.CardGiftcard, Color(0xFFD94A7E)),
-    PHONE("phone", "اتصالات", Icons.Rounded.PhoneAndroid, Color(0xFF4F6BDB)),
-    TRAVEL("travel", "سفر", Icons.Rounded.Flight, Color(0xFF2A9BD1)),
-    OTHER("other", "أخرى", Icons.Rounded.MoreHoriz, Color(0xFF6B7C76));
+    FOOD("food", "أكل وشرب", Ic.Food, Color(0xFFF2A33A)),
+    SHOPPING("shopping", "تسوق", Ic.Bag, Color(0xFFE0568A)),
+    BILLS("bills", "فواتير", Ic.Receipt, Color(0xFF3B82C4)),
+    TRANSPORT("transport", "مواصلات", Ic.Bus, Color(0xFF0E9AA7)),
+    FUN("fun", "ترفيه", Ic.Tv, Color(0xFF8A63D2)),
+    HEALTH("health", "صحة", Ic.Heart, Color(0xFFD8512D)),
+    EDUCATION("education", "تعليم", Ic.Book, Color(0xFF5B8C2A)),
+    CAFE("cafe", "كافيه", Ic.Cafe, Color(0xFFA8741A)),
+    GIFTS("gifts", "هدايا", Ic.Gift, Color(0xFFD94A7E)),
+    PHONE("phone", "اتصالات", Ic.Phone, Color(0xFF4F6BDB)),
+    TRAVEL("travel", "سفر", Ic.Plane, Color(0xFF2A9BD1)),
+    OTHER("other", "أخرى", Ic.Dots, Color(0xFF6B7C76));
 
     companion object {
         fun of(key: String): Cat = entries.firstOrNull { it.key == key } ?: OTHER
@@ -245,33 +230,33 @@ fun monthLabel(offset: Int): String =
 /* ---------------- الثيم ---------------- */
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF0E7C66),
+    primary = Color(0xFF0FA968),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD5F0E7),
-    onPrimaryContainer = Color(0xFF06382E),
-    secondaryContainer = Color(0xFFD5F0E7),
-    onSecondaryContainer = Color(0xFF06382E),
-    background = Color(0xFFF4F7F5),
-    onBackground = Color(0xFF12211D),
+    primaryContainer = Color(0xFFE3F5EC),
+    onPrimaryContainer = Color(0xFF0A5A3C),
+    secondaryContainer = Color(0xFFE3F5EC),
+    onSecondaryContainer = Color(0xFF0A5A3C),
+    background = Color(0xFFF7FAF8),
+    onBackground = Color(0xFF13201A),
     surface = Color.White,
-    onSurface = Color(0xFF12211D),
-    surfaceVariant = Color(0xFFE6EDE9),
-    onSurfaceVariant = Color(0xFF5E6F69),
+    onSurface = Color(0xFF13201A),
+    surfaceVariant = Color(0xFFE9EFEC),
+    onSurfaceVariant = Color(0xFF5B6862),
     outline = Color(0xFF8A9B95),
     outlineVariant = Color(0xFFDCE5E0),
     error = Color(0xFFD8512D)
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF4FD1B0),
-    onPrimary = Color(0xFF00382D),
-    primaryContainer = Color(0xFF17352E),
+    primary = Color(0xFF2FD08A),
+    onPrimary = Color(0xFF00382A),
+    primaryContainer = Color(0xFF16352A),
     onPrimaryContainer = Color(0xFFD5F0E7),
-    secondaryContainer = Color(0xFF17352E),
+    secondaryContainer = Color(0xFF16352A),
     onSecondaryContainer = Color(0xFFD5F0E7),
-    background = Color(0xFF0F1815),
+    background = Color(0xFF0E1512),
     onBackground = Color(0xFFE7F0EC),
-    surface = Color(0xFF17221E),
+    surface = Color(0xFF17211D),
     onSurface = Color(0xFFE7F0EC),
     surfaceVariant = Color(0xFF22302B),
     onSurfaceVariant = Color(0xFF93A59E),
@@ -280,14 +265,18 @@ private val DarkColors = darkColorScheme(
     error = Color(0xFFFF7A57)
 )
 
+/** ألوان الهيدر الأخضر المتدرج. */
+val HeaderBrush: Brush = Brush.linearGradient(listOf(Color(0xFF0FA968), Color(0xFF0B6B4B)))
+
 @Composable
 fun incomeColor(): Color =
-    if (isSystemInDarkTheme()) Color(0xFF4FD19A) else Color(0xFF17935F)
+    if (isSystemInDarkTheme()) Color(0xFF4FD19A) else Color(0xFF0A8F5A)
 
 @Composable
 fun MasrofyTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors,
+        typography = remember { cairoTypography() },
         content = content
     )
 }
@@ -383,6 +372,17 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
             items.filter { it.ref != ref }
         }
         store.save(items)
+    }
+
+    val darkTheme = isSystemInDarkTheme()
+    val view = LocalView.current
+    val greenTop = tab == 0 && moreScreen.isEmpty() && invScreen == null
+    SideEffect {
+        val w = (view.context as? android.app.Activity)?.window
+        if (w != null) {
+            // أيقونات شريط الحالة بيضا على الهيدر الأخضر بتاع الرئيسية، وغامقة في باقي الصفحات
+            WindowCompat.getInsetsController(w, view).isAppearanceLightStatusBars = !(greenTop || darkTheme)
+        }
     }
 
     val screen = invScreen
@@ -505,59 +505,26 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
     } else {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            bottomBar = {
-                NavigationBar {
-                    NavigationBarItem(
-                        selected = tab == 0,
-                        onClick = { tab = 0 },
-                        icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
-                        label = { Text("الرئيسية") }
-                    )
-                    NavigationBarItem(
-                        selected = tab == 1,
-                        onClick = { tab = 1 },
-                        icon = { Icon(Icons.Rounded.Receipt, contentDescription = null) },
-                        label = { Text("الفواتير") }
-                    )
-                    NavigationBarItem(
-                        selected = tab == 2,
-                        onClick = { tab = 2 },
-                        icon = { Icon(Icons.Rounded.PieChart, contentDescription = null) },
-                        label = { Text("الإحصائيات") }
-                    )
-                    NavigationBarItem(
-                        selected = tab == 3,
-                        onClick = { tab = 3 },
-                        icon = { Icon(Icons.Rounded.MoreHoriz, contentDescription = null) },
-                        label = { Text("المزيد") }
-                    )
-                }
+            contentWindowInsets = if (tab == 0) {
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+            } else {
+                WindowInsets.safeDrawing
             },
-            floatingActionButton = {
-                if (tab == 1) {
-                    ExtendedFloatingActionButton(
-                        onClick = { invScreen = InvScreen.Edit(null) },
-                        icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                        text = { Text("فاتورة جديدة") },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = RoundedCornerShape(18.dp)
-                    )
-                } else if (tab != 3) {
-                    FloatingActionButton(
-                        onClick = {
+            bottomBar = {
+                MasrofyBottomBar(
+                    tab = tab,
+                    onTab = { tab = it },
+                    onCenter = {
+                        if (tab == 1) {
+                            invScreen = InvScreen.Edit(null)
+                        } else {
                             editingTx = null
                             prefill = null
                             sheetIncome = false
                             showSheet = true
-                        },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Icon(Icons.Rounded.Add, contentDescription = "إضافة عملية")
+                        }
                     }
-                }
+                )
             }
         ) { pad ->
             when (tab) {
@@ -583,6 +550,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     onOpenCalc = { moreScreen = "calc" },
                     onOpenNotif = { moreScreen = "notif" },
                     onOpenGoals = { moreScreen = "goals" },
+                    onOpenMore = { moreScreen = it },
                     onSetBudget = { value ->
                         budget = value
                         store.budget = value
@@ -672,6 +640,75 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
     }
 }
 
+/* ---------------- الشريط السفلي ---------------- */
+
+@Composable
+private fun MasrofyBottomBar(tab: Int, onTab: (Int) -> Unit, onCenter: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .height(92.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(66.dp)
+                .shadow(10.dp, RectangleShape, clip = false)
+                .background(MaterialTheme.colorScheme.surface),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BarItem("الرئيسية", Ic.Home, tab == 0, Modifier.weight(1f)) { onTab(0) }
+            BarItem("الفواتير", Ic.Receipt, tab == 1, Modifier.weight(1f)) { onTab(1) }
+            Spacer(Modifier.weight(1f))
+            BarItem("الإحصائيات", Ic.Pie, tab == 2, Modifier.weight(1f)) { onTab(2) }
+            BarItem("المزيد", Ic.More, tab == 3, Modifier.weight(1f)) { onTab(3) }
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .size(64.dp)
+                .shadow(10.dp, CircleShape)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(4.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+                .clickable(onClick = onCenter),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Ic.Plus,
+                contentDescription = "إضافة",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(30.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun BarItem(label: String, icon: ImageVector, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+        Text(
+            label,
+            color = color,
+            fontSize = 11.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+            maxLines = 1
+        )
+    }
+}
+
 /* ---------------- الرئيسية ---------------- */
 
 @Composable
@@ -686,11 +723,11 @@ fun MonthNav(offset: Int, onChange: (Int) -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = { if (offset < 60) onChange(offset + 1) }) {
-            Icon(Icons.Rounded.KeyboardArrowRight, contentDescription = "الشهر السابق")
+            Icon(Ic.ChevRight, contentDescription = "الشهر السابق")
         }
         Text(monthLabel(offset), fontWeight = FontWeight.SemiBold)
         IconButton(onClick = { onChange(offset - 1) }, enabled = offset > 0) {
-            Icon(Icons.Rounded.KeyboardArrowLeft, contentDescription = "الشهر التالي")
+            Icon(Ic.ChevLeft, contentDescription = "الشهر التالي")
         }
     }
 }
@@ -710,6 +747,7 @@ fun HomeScreen(
     onOpenCalc: () -> Unit,
     onOpenNotif: () -> Unit,
     onOpenGoals: () -> Unit,
+    onOpenMore: (String) -> Unit,
     onSetBudget: (Double) -> Unit,
     onEdit: (Tx) -> Unit,
     onDelete: (Tx) -> Unit,
@@ -747,27 +785,24 @@ fun HomeScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        item { HomeHeader(userName, onEditName, onOpenNotif) }
-        item { MonthNav(monthOffset, onMonthChange) }
-        item { BalanceCard(income - spent, monthIncome, monthSpent) }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) {
-                    QuickAction("مصروف", Icons.Rounded.ArrowUpward, MaterialTheme.colorScheme.error) { onQuickAdd(false) }
-                }
-                Box(modifier = Modifier.weight(1f)) {
-                    QuickAction("دخل", Icons.Rounded.ArrowDownward, incomeColor()) { onQuickAdd(true) }
-                }
-                Box(modifier = Modifier.weight(1f)) {
-                    QuickAction("فاتورة", Icons.Rounded.Receipt, Color(0xFF3B82C4)) { onNewInvoice() }
-                }
-                Box(modifier = Modifier.weight(1f)) {
-                    QuickAction("حاسبة", Icons.Rounded.Calculate, MaterialTheme.colorScheme.primary) { onOpenCalc() }
-                }
-            }
+            HomeTop(
+                userName = userName,
+                onEditName = onEditName,
+                onOpenNotif = onOpenNotif,
+                balance = income - spent,
+                income = monthIncome,
+                spent = monthSpent,
+                monthOffset = monthOffset,
+                onMonthChange = onMonthChange,
+                onQuickAdd = onQuickAdd,
+                onNewInvoice = onNewInvoice,
+                onOpenCalc = onOpenCalc,
+                onOpenMore = onOpenMore
+            )
         }
         item { BudgetCard(budget, monthSpent) { editBudget = true } }
         item { WeekCard(txs) }
@@ -786,7 +821,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Icon(
-                        Icons.Rounded.Warning,
+                        Ic.Warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error
                     )
@@ -804,11 +839,11 @@ fun HomeScreen(
                 value = query,
                 onValueChange = { query = it },
                 placeholder = { Text("ابحث في العمليات") },
-                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                leadingIcon = { Icon(Ic.Search, contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { query = "" }) {
-                            Icon(Icons.Rounded.Close, contentDescription = "مسح البحث")
+                            Icon(Ic.Close, contentDescription = "مسح البحث")
                         }
                     }
                 },
@@ -847,9 +882,9 @@ fun HomeScreen(
         }
         item {
             Text(
-                "العمليات (${shown.size})",
+                "آخر العمليات (${shown.size})",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
@@ -898,6 +933,78 @@ fun HomeScreen(
     }
 }
 
+/** يخلّي العنصر يتمدد على عرض الشاشة كله حتى لو الليست ليها padding. */
+private fun Modifier.fullBleed(extra: androidx.compose.ui.unit.Dp): Modifier = layout { m, c ->
+    val e = extra.roundToPx()
+    val p = m.measure(c.copy(minWidth = c.maxWidth + 2 * e, maxWidth = c.maxWidth + 2 * e))
+    layout(c.maxWidth, p.height) { p.place(-e, 0) }
+}
+
+@Composable
+private fun HomeTop(
+    userName: String,
+    onEditName: () -> Unit,
+    onOpenNotif: () -> Unit,
+    balance: Double,
+    income: Double,
+    spent: Double,
+    monthOffset: Int,
+    onMonthChange: (Int) -> Unit,
+    onQuickAdd: (Boolean) -> Unit,
+    onNewInvoice: () -> Unit,
+    onOpenCalc: () -> Unit,
+    onOpenMore: (String) -> Unit
+) {
+    Column(modifier = Modifier.fullBleed(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+                .background(HeaderBrush)
+                .drawBehind {
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.07f),
+                        radius = size.width * 0.42f,
+                        center = Offset(size.width * 0.05f, -size.height * 0.1f)
+                    )
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.05f),
+                        radius = size.width * 0.3f,
+                        center = Offset(size.width * 0.98f, size.height * 0.55f)
+                    )
+                }
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 84.dp)
+        ) {
+            HomeHeader(userName, onEditName, onOpenNotif)
+        }
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .layout { m, c ->
+                    val p = m.measure(c)
+                    val up = 68.dp.roundToPx()
+                    layout(p.width, p.height - up) { p.place(0, -up) }
+                },
+            verticalArrangement = Arrangement.spacedBy(18.dp)
+        ) {
+            BalanceCard(
+                balance, income, spent, monthOffset, onMonthChange,
+                onQuickAdd, onNewInvoice, onOpenCalc
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("خدماتي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    ServiceItem("متكرر", Ic.Repeat, Modifier.weight(1f)) { onOpenMore("rec") }
+                    ServiceItem("أهداف", Ic.Target, Modifier.weight(1f)) { onOpenMore("goals") }
+                    ServiceItem("ميزانيات", Ic.Wallet, Modifier.weight(1f)) { onOpenMore("catb") }
+                    ServiceItem("عملاء", Ic.Users, Modifier.weight(1f)) { onOpenMore("clients") }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun HomeHeader(userName: String, onEditName: () -> Unit, onOpenNotif: () -> Unit) {
     val hour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
@@ -910,14 +1017,14 @@ private fun HomeHeader(userName: String, onEditName: () -> Unit, onOpenNotif: ()
         Surface(
             onClick = onEditName,
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(44.dp)
+            color = Color.White.copy(alpha = 0.22f),
+            modifier = Modifier.size(46.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     if (userName.isBlank()) "م" else userName.take(1),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontWeight = FontWeight.ExtraBold,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -926,27 +1033,28 @@ private fun HomeHeader(userName: String, onEditName: () -> Unit, onOpenNotif: ()
             Text(
                 greeting,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.85f)
             )
             Text(
                 if (userName.isBlank()) "أهلاً بيك" else "أهلاً يا " + userName,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
         Surface(
             onClick = onOpenNotif,
-            shape = RoundedCornerShape(14.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.size(42.dp)
+            shape = CircleShape,
+            color = Color.White.copy(alpha = 0.18f),
+            modifier = Modifier.size(44.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    Icons.Rounded.Notifications,
+                    Ic.Bell,
                     contentDescription = "التنبيهات",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = Color.White
                 )
             }
         }
@@ -954,31 +1062,49 @@ private fun HomeHeader(userName: String, onEditName: () -> Unit, onOpenNotif: ()
 }
 
 @Composable
-private fun QuickAction(label: String, icon: ImageVector, tint: Color, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth()
+private fun ServiceItem(label: String, icon: ImageVector, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.5.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(13.dp))
-                    .background(tint.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
-            }
-            Text(label, style = MaterialTheme.typography.labelMedium)
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
         }
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun QuickAction(label: String, icon: ImageVector, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+        }
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -1096,78 +1222,91 @@ private fun NameDialog(current: String, onDismiss: () -> Unit, onSave: (String) 
 }
 
 @Composable
-private fun BalanceCard(balance: Double, income: Double, spent: Double) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF0E7C66), Color(0xFF0A4F57))))
-            .drawBehind {
-                drawCircle(
-                    color = Color.White.copy(alpha = 0.07f),
-                    radius = size.width * 0.38f,
-                    center = Offset(size.width * 0.1f, -size.height * 0.05f)
+private fun BalanceCard(
+    balance: Double,
+    income: Double,
+    spent: Double,
+    monthOffset: Int,
+    onMonthChange: (Int) -> Unit,
+    onQuickAdd: (Boolean) -> Unit,
+    onNewInvoice: () -> Unit,
+    onOpenCalc: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 8.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "رصيدك الحالي",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                drawCircle(
-                    color = Color.White.copy(alpha = 0.05f),
-                    radius = size.width * 0.28f,
-                    center = Offset(size.width * 0.95f, size.height)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { if (monthOffset < 60) onMonthChange(monthOffset + 1) }, modifier = Modifier.size(30.dp)) {
+                        Icon(Ic.ChevRight, contentDescription = "الشهر السابق", modifier = Modifier.size(20.dp))
+                    }
+                    Text(
+                        monthLabel(monthOffset),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    IconButton(onClick = { onMonthChange(monthOffset - 1) }, enabled = monthOffset > 0, modifier = Modifier.size(30.dp)) {
+                        Icon(Ic.ChevLeft, contentDescription = "الشهر التالي", modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    money(balance),
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "ج.م",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 9.dp)
                 )
             }
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            "رصيدك الحالي",
-            color = Color.White.copy(alpha = 0.8f),
-            style = MaterialTheme.typography.labelLarge
-        )
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(money(balance), color = Color.White, fontSize = 38.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(6.dp))
-            Text(
-                "ج.م",
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(modifier = Modifier.weight(1f)) { MiniStat("دخل الشهر", income, Icons.Rounded.ArrowDownward) }
-            Box(modifier = Modifier.weight(1f)) { MiniStat("مصروف الشهر", spent, Icons.Rounded.ArrowUpward) }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(modifier = Modifier.weight(1f)) { MiniStat("دخل الشهر", income, Ic.Down, incomeColor()) }
+                Box(modifier = Modifier.weight(1f)) { MiniStat("مصروف الشهر", spent, Ic.Up, MaterialTheme.colorScheme.error) }
+            }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                QuickAction("مصروف", Ic.Up, Modifier.weight(1f)) { onQuickAdd(false) }
+                QuickAction("دخل", Ic.Down, Modifier.weight(1f)) { onQuickAdd(true) }
+                QuickAction("فاتورة", Ic.Receipt, Modifier.weight(1f)) { onNewInvoice() }
+                QuickAction("حاسبة", Ic.Calc, Modifier.weight(1f)) { onOpenCalc() }
+            }
         }
     }
 }
 
 @Composable
-private fun MiniStat(label: String, value: Double, icon: ImageVector) {
+private fun MiniStat(label: String, value: Double, icon: ImageVector, tint: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.14f))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .clip(RoundedCornerShape(16.dp))
+            .background(tint.copy(alpha = 0.1f))
+            .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(30.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.White.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-        }
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
         Column {
-            Text(label, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
-            Text(
-                money(value),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleSmall
-            )
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(money(value), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
         }
     }
 }
@@ -1203,7 +1342,7 @@ private fun BudgetCard(budget: Double, spent: Double, onClick: () -> Unit) {
                     )
                     Spacer(Modifier.width(4.dp))
                     Icon(
-                        Icons.Rounded.Edit,
+                        Ic.Edit,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
@@ -1273,8 +1412,8 @@ fun BudgetDialog(
 @Composable
 private fun TxRow(tx: Tx, onClick: () -> Unit, onDeleteClick: () -> Unit) {
     val cat = Cat.of(tx.category)
-    val tint = if (tx.isIncome) incomeColor() else cat.color
-    val amountColor = if (tx.isIncome) incomeColor() else MaterialTheme.colorScheme.error
+    val tint = MaterialTheme.colorScheme.primary
+    val amountColor = if (tx.isIncome) incomeColor() else MaterialTheme.colorScheme.onSurface
     val date = remember(tx.createdAt) { SimpleDateFormat("d MMM", latinArabic).format(Date(tx.createdAt)) }
     val sign = if (tx.isIncome) "+" else "−"
     val tag = when {
@@ -1297,13 +1436,13 @@ private fun TxRow(tx: Tx, onClick: () -> Unit, onDeleteClick: () -> Unit) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(tint.copy(alpha = 0.15f)),
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (tx.isIncome) Icons.Rounded.AccountBalanceWallet else cat.icon,
+                    imageVector = if (tx.isIncome) Ic.Cash else cat.icon,
                     contentDescription = null,
                     tint = tint
                 )
@@ -1320,7 +1459,7 @@ private fun TxRow(tx: Tx, onClick: () -> Unit, onDeleteClick: () -> Unit) {
                     if (tx.photo.isNotBlank()) {
                         Spacer(Modifier.width(4.dp))
                         Icon(
-                            Icons.Rounded.AttachFile,
+                            Ic.Attach,
                             contentDescription = "مرفق صورة",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(15.dp)
@@ -1340,7 +1479,7 @@ private fun TxRow(tx: Tx, onClick: () -> Unit, onDeleteClick: () -> Unit) {
             )
             IconButton(onClick = onDeleteClick, modifier = Modifier.size(32.dp)) {
                 Icon(
-                    Icons.Rounded.DeleteOutline,
+                    Ic.Trash,
                     contentDescription = "حذف",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
@@ -1367,7 +1506,7 @@ fun EmptyState(title: String, hint: String) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                Icons.Rounded.AccountBalanceWallet,
+                Ic.Wallet,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(34.dp)
@@ -1595,17 +1734,34 @@ fun AddSheet(
             TypeButton("دخل", isIncome, Modifier.weight(1f)) { isIncome = true }
         }
 
-        OutlinedTextField(
-            value = amountText,
-            onValueChange = { amountText = it },
-            label = { Text("المبلغ") },
-            suffix = { Text("ج.م") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            textStyle = MaterialTheme.typography.headlineSmall,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f))
+                .padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("المبلغ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        amountText.ifEmpty { "0" },
+                        fontSize = 46.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (amountText.isEmpty()) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "ج.م",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 10.dp)
+                    )
+                }
+            }
+        }
 
         OutlinedTextField(
             value = title,
@@ -1632,6 +1788,31 @@ fun AddSheet(
                             }
                         }
                         repeat(4 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
+            }
+        }
+
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                listOf(
+                    listOf("1", "2", "3"),
+                    listOf("4", "5", "6"),
+                    listOf("7", "8", "9"),
+                    listOf(".", "0", "⌫")
+                ).forEach { r ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        r.forEach { k ->
+                            KeypadKey(k, Modifier.weight(1f)) {
+                                amountText = when (k) {
+                                    "⌫" -> amountText.dropLast(1)
+                                    "." -> if (amountText.contains('.')) amountText
+                                    else if (amountText.isEmpty()) "0." else "$amountText."
+                                    else -> if (amountText.length >= 10) amountText
+                                    else if (amountText == "0") k else amountText + k
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1682,35 +1863,53 @@ fun AddSheet(
 
 @Composable
 private fun CatTile(cat: Cat, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) cat.color.copy(alpha = 0.14f) else Color.Transparent,
-        border = BorderStroke(1.5.dp, if (selected) cat.color else Color.Transparent),
-        modifier = Modifier.fillMaxWidth()
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .size(54.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(if (selected) scheme.primary else scheme.primaryContainer),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(13.dp))
-                    .background(cat.color.copy(alpha = 0.18f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(cat.icon, contentDescription = null, tint = cat.color, modifier = Modifier.size(20.dp))
-            }
-            Text(
-                cat.label,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            Icon(
+                cat.icon,
+                contentDescription = null,
+                tint = if (selected) scheme.onPrimary else scheme.primary,
+                modifier = Modifier.size(25.dp)
             )
+        }
+        Text(
+            cat.label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun KeypadKey(label: String, modifier: Modifier, onClick: () -> Unit) {
+    Box(
+        modifier = modifier
+            .height(50.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (label == "⌫") {
+            Icon(Ic.Backspace, contentDescription = "مسح", modifier = Modifier.size(26.dp))
+        } else {
+            Text(label, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }

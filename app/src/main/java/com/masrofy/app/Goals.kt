@@ -22,17 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.CardGiftcard
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.Flight
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -70,24 +59,24 @@ data class Goal(
 )
 
 private val GOAL_ICONS: List<Pair<String, ImageVector>> = listOf(
-    "phone" to Icons.Rounded.PhoneAndroid,
-    "plane" to Icons.Rounded.Flight,
-    "heart" to Icons.Rounded.Favorite,
-    "home" to Icons.Rounded.Home,
-    "car" to Icons.Rounded.DirectionsCar,
-    "school" to Icons.Rounded.School,
-    "gift" to Icons.Rounded.CardGiftcard,
-    "flag" to Icons.Rounded.Flag
+    "phone" to Ic.Phone,
+    "plane" to Ic.Plane,
+    "heart" to Ic.Heart,
+    "home" to Ic.Home,
+    "car" to Ic.Bus,
+    "school" to Ic.Book,
+    "gift" to Ic.Gift,
+    "flag" to Ic.Flag
 )
 
 private fun goalIcon(key: String): ImageVector =
-    GOAL_ICONS.firstOrNull { it.first == key }?.second ?: Icons.Rounded.Flag
+    GOAL_ICONS.firstOrNull { it.first == key }?.second ?: Ic.Flag
 
 private fun goalColor(key: String): Color = when (key) {
     "phone" -> Color(0xFF4F6BDB)
     "plane" -> Color(0xFF2A9BD1)
     "heart" -> Color(0xFFD8512D)
-    "home" -> Color(0xFF0E7C66)
+    "home" -> Color(0xFF0FA968)
     "car" -> Color(0xFF3B82C4)
     "school" -> Color(0xFF5B8C2A)
     "gift" -> Color(0xFFD94A7E)
@@ -228,7 +217,7 @@ fun GoalsScreen(goals: List<Goal>, onBack: () -> Unit, onSave: (List<Goal>) -> U
                     editing = null
                     showForm = true
                 },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                icon = { Icon(Ic.Plus, contentDescription = null) },
                 text = { Text("هدف جديد") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -423,7 +412,7 @@ private fun GoalCard(g: Goal, onClick: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Rounded.Check,
+                            Ic.Check,
                             contentDescription = "تم",
                             tint = Color.White,
                             modifier = Modifier.size(18.dp)

@@ -31,20 +31,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountBalanceWallet
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Autorenew
-import androidx.compose.material.icons.rounded.Backup
-import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.People
-import androidx.compose.material.icons.rounded.Savings
-import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -307,43 +293,43 @@ fun MoreScreen(onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
         }
         item {
             MoreItem(
-                Icons.Rounded.Calculate, Color(0xFF0E7C66), "الحاسبة",
+                Ic.Calc, Color(0xFF0FA968), "الحاسبة",
                 "حاسبة سريعة وتسجّل الناتج كمصروف"
             ) { onOpen("calc") }
         }
         item {
             MoreItem(
-                Icons.Rounded.Flag, Color(0xFF17935F), "أهداف الادخار",
+                Ic.Flag, Color(0xFF0A8F5A), "أهداف الادخار",
                 "حدد هدف وتابع تقدمك لحد ما توصله"
             ) { onOpen("goals") }
         }
         item {
             MoreItem(
-                Icons.Rounded.Autorenew, Color(0xFF3B82C4), "العمليات المتكررة",
+                Ic.Repeat, Color(0xFF3B82C4), "العمليات المتكررة",
                 "إيجار واشتراكات ومرتب بتتسجل لوحدها كل شهر"
             ) { onOpen("rec") }
         }
         item {
             MoreItem(
-                Icons.Rounded.Savings, Color(0xFFF2A33A), "ميزانيات الفئات",
+                Ic.Target, Color(0xFFF2A33A), "ميزانيات الفئات",
                 "حدد حد لكل فئة وهنبهك لو عديته"
             ) { onOpen("catb") }
         }
         item {
             MoreItem(
-                Icons.Rounded.People, Color(0xFF8A63D2), "العملاء",
+                Ic.Users, Color(0xFF8A63D2), "العملاء",
                 "عملاءك المحفوظين لإنشاء الفواتير أسرع"
             ) { onOpen("clients") }
         }
         item {
             MoreItem(
-                Icons.Rounded.Notifications, Color(0xFFE0568A), "التنبيهات",
+                Ic.Bell, Color(0xFFE0568A), "التنبيهات",
                 "تذكير يومي بتسجيل مصروفاتك"
             ) { onOpen("notif") }
         }
         item {
             MoreItem(
-                Icons.Rounded.Backup, Color(0xFFD8512D), "النسخ الاحتياطي",
+                Ic.Cloud, Color(0xFFD8512D), "النسخ الاحتياطي",
                 "صدّر بياناتك أو استرجعها لو غيّرت تليفونك"
             ) { onOpen("backup") }
         }
@@ -381,7 +367,7 @@ private fun MoreItem(icon: ImageVector, tint: Color, title: String, sub: String,
                 )
             }
             Icon(
-                Icons.Rounded.ChevronLeft,
+                Ic.ChevLeft,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -414,7 +400,7 @@ fun RecurringScreen(store: Store, onBack: () -> Unit, onChanged: () -> Unit) {
                     editing = null
                     showForm = true
                 },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                icon = { Icon(Ic.Plus, contentDescription = null) },
                 text = { Text("عملية متكررة") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -518,7 +504,7 @@ private fun RecurringRow(r: Recurring, onClick: () -> Unit, onToggle: (Boolean) 
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (r.isIncome) Icons.Rounded.AccountBalanceWallet else cat.icon,
+                    imageVector = if (r.isIncome) Ic.Wallet else cat.icon,
                     contentDescription = null,
                     tint = tint
                 )
@@ -540,7 +526,7 @@ private fun RecurringRow(r: Recurring, onClick: () -> Unit, onToggle: (Boolean) 
             Switch(checked = r.active, onCheckedChange = onToggle)
             IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                 Icon(
-                    Icons.Rounded.DeleteOutline,
+                    Ic.Trash,
                     contentDescription = "حذف",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
@@ -771,7 +757,7 @@ fun ClientsScreen(
                     editing = null
                     showForm = true
                 },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                icon = { Icon(Ic.Plus, contentDescription = null) },
                 text = { Text("عميل جديد") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -893,7 +879,7 @@ private fun ClientRow(c: Client, count: Int, total: Double, onClick: () -> Unit,
             }
             IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                 Icon(
-                    Icons.Rounded.DeleteOutline,
+                    Ic.Trash,
                     contentDescription = "حذف",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
@@ -1018,7 +1004,7 @@ fun BackupScreen(store: Store, invStore: InvoiceStore, onBack: () -> Unit, onRes
                             .fillMaxWidth()
                             .height(52.dp)
                     ) {
-                        Icon(Icons.Rounded.Upload, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(Ic.Upload, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("تصدير نسخة احتياطية", fontWeight = FontWeight.SemiBold)
                     }
@@ -1044,7 +1030,7 @@ fun BackupScreen(store: Store, invStore: InvoiceStore, onBack: () -> Unit, onRes
                             .fillMaxWidth()
                             .height(52.dp)
                     ) {
-                        Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(Ic.Download, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("استرجاع من ملف", fontWeight = FontWeight.SemiBold)
                     }

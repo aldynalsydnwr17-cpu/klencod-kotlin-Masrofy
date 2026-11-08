@@ -22,10 +22,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CameraAlt
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -175,7 +171,7 @@ fun PhotoSection(photo: String, key: Long, onChange: (String) -> Unit) {
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Rounded.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Ic.Cam, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("تصوير")
                 }
@@ -184,7 +180,7 @@ fun PhotoSection(photo: String, key: Long, onChange: (String) -> Unit) {
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Ic.Photo, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("من المعرض")
                 }
@@ -221,7 +217,7 @@ fun PhotoSection(photo: String, key: Long, onChange: (String) -> Unit) {
                 }
                 TextButton(onClick = { gallery.launch("image/*") }) { Text("تغيير") }
                 IconButton(onClick = { onChange("") }) {
-                    Icon(Icons.Rounded.Close, contentDescription = "إزالة الصورة")
+                    Icon(Ic.Close, contentDescription = "إزالة الصورة")
                 }
             }
         }

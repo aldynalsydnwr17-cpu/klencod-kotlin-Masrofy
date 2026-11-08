@@ -39,13 +39,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Receipt
-import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -275,7 +268,7 @@ fun InvoicesScreen(
                     )
                 }
                 IconButton(onClick = onEditBusiness) {
-                    Icon(Icons.Rounded.Edit, contentDescription = "بيانات النشاط")
+                    Icon(Ic.Edit, contentDescription = "بيانات النشاط")
                 }
             }
         }
@@ -284,7 +277,7 @@ fun InvoicesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(28.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF0E7C66), Color(0xFF0A4F57))))
+                    .background(Brush.linearGradient(listOf(Color(0xFF0FA968), Color(0xFF0B6B4B))))
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -327,7 +320,7 @@ fun InvoicesScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Rounded.Receipt,
+                            Ic.Receipt,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(34.dp)
@@ -396,7 +389,7 @@ private fun InvoiceCard(inv: Invoice, onClick: () -> Unit) {
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Rounded.Receipt, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(Ic.Receipt, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(inv.client, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -475,7 +468,7 @@ fun ScreenBar(title: String, onBack: () -> Unit, actions: @Composable RowScope.(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Rounded.ArrowForward, contentDescription = "رجوع")
+                Icon(Ic.Fwd, contentDescription = "رجوع")
             }
             Text(
                 title,
@@ -598,7 +591,7 @@ fun InvoiceEditor(
                         if (drafts.size > 1) {
                             IconButton(onClick = { drafts.removeAt(index) }) {
                                 Icon(
-                                    Icons.Rounded.Delete,
+                                    Ic.Trash,
                                     contentDescription = "حذف البند",
                                     tint = MaterialTheme.colorScheme.error
                                 )
@@ -636,7 +629,7 @@ fun InvoiceEditor(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Ic.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("إضافة بند")
             }
@@ -734,7 +727,7 @@ fun InvoiceView(
         topBar = {
             ScreenBar(inv.number, onBack) {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Rounded.Edit, contentDescription = "تعديل")
+                    Icon(Ic.Edit, contentDescription = "تعديل")
                 }
             }
         }
@@ -756,7 +749,7 @@ fun InvoiceView(
                     .fillMaxWidth()
                     .height(54.dp)
             ) {
-                Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(20.dp))
+                Icon(Ic.Share, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("مشاركة كملف PDF", fontWeight = FontWeight.SemiBold)
             }
@@ -800,7 +793,7 @@ fun InvoiceView(
 private fun InvoicePaper(inv: Invoice, biz: Business) {
     val ink = Color(0xFF12211D)
     val muted = Color(0xFF5E6F69)
-    val green = Color(0xFF0E7C66)
+    val green = Color(0xFF0FA968)
     val line = Color(0xFFE3EAE6)
 
     Surface(
@@ -814,7 +807,7 @@ private fun InvoicePaper(inv: Invoice, biz: Business) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Brush.linearGradient(listOf(Color(0xFF0E7C66), Color(0xFF0A4F57))))
+                    .background(Brush.linearGradient(listOf(Color(0xFF0FA968), Color(0xFF0B6B4B))))
                     .padding(horizontal = 20.dp, vertical = 22.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -990,7 +983,7 @@ object InvoicePdf {
     }
 
     fun create(context: Context, inv: Invoice, biz: Business): File {
-        val green = 0xFF0E7C66.toInt()
+        val green = 0xFF0FA968.toInt()
         val ink = 0xFF12211D.toInt()
         val muted = 0xFF5E6F69.toInt()
         val soft = 0xFFE6F3EE.toInt()
@@ -1028,7 +1021,7 @@ object InvoicePdf {
         block(c, "التاريخ", LEFT, y, 200f, tp(10f, muted), Layout.Alignment.ALIGN_OPPOSITE)
         block(c, dateText, LEFT, y + 14f, 200f, tp(13f, ink, true), Layout.Alignment.ALIGN_OPPOSITE)
         val statusText = if (inv.paid) "مدفوعة" else "غير مدفوعة"
-        val statusColor = if (inv.paid) 0xFF17935F.toInt() else 0xFFC77D0A.toInt()
+        val statusColor = if (inv.paid) 0xFF0A8F5A.toInt() else 0xFFC77D0A.toInt()
         block(c, statusText, LEFT, y + 38f, 200f, tp(12f, statusColor, true), Layout.Alignment.ALIGN_OPPOSITE)
         y += 14f + clientH + leftH + 22f
         if (y < 218f) y = 218f

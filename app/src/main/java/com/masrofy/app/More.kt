@@ -288,8 +288,14 @@ fun MoreScreen(onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
             Text(
                 "المزيد",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
+        }
+        item {
+            MoreItem(
+                Ic.Receipt, Color(0xFF0FA968), "الفواتير",
+                "أنشئ فواتير وابعتها PDF وتابع المدفوع والمستحق"
+            ) { onOpen("invoices") }
         }
         item {
             MoreItem(
@@ -299,37 +305,37 @@ fun MoreScreen(onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
         }
         item {
             MoreItem(
-                Ic.Flag, Color(0xFF0A8F5A), "أهداف الادخار",
+                Ic.Flag, Color(0xFF0FA968), "أهداف الادخار",
                 "حدد هدف وتابع تقدمك لحد ما توصله"
             ) { onOpen("goals") }
         }
         item {
             MoreItem(
-                Ic.Repeat, Color(0xFF3B82C4), "العمليات المتكررة",
+                Ic.Repeat, Color(0xFF0FA968), "العمليات المتكررة",
                 "إيجار واشتراكات ومرتب بتتسجل لوحدها كل شهر"
             ) { onOpen("rec") }
         }
         item {
             MoreItem(
-                Ic.Target, Color(0xFFF2A33A), "ميزانيات الفئات",
+                Ic.Target, Color(0xFF0FA968), "ميزانيات الفئات",
                 "حدد حد لكل فئة وهنبهك لو عديته"
             ) { onOpen("catb") }
         }
         item {
             MoreItem(
-                Ic.Users, Color(0xFF8A63D2), "العملاء",
+                Ic.Users, Color(0xFF0FA968), "العملاء",
                 "عملاءك المحفوظين لإنشاء الفواتير أسرع"
             ) { onOpen("clients") }
         }
         item {
             MoreItem(
-                Ic.Bell, Color(0xFFE0568A), "التنبيهات",
+                Ic.Bell, Color(0xFF0FA968), "التنبيهات",
                 "تذكير يومي بتسجيل مصروفاتك"
             ) { onOpen("notif") }
         }
         item {
             MoreItem(
-                Ic.Cloud, Color(0xFFD8512D), "النسخ الاحتياطي",
+                Ic.Cloud, Color(0xFF0FA968), "النسخ الاحتياطي",
                 "صدّر بياناتك أو استرجعها لو غيّرت تليفونك"
             ) { onOpen("backup") }
         }

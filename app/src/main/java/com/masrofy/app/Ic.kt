@@ -74,8 +74,8 @@ object Ic {
 
     val Bag: ImageVector by lazy {
         make("Bag",
-            "M6 8h12l1 12H5z",
-            "M9 8a3 3 0 0 1 6 0"
+            "M3 10h18l-2 10H5z",
+            "M8 10l3-6M16 10l-3-6"
         )
     }
 
@@ -180,8 +180,9 @@ object Ic {
 
     val Book: ImageVector by lazy {
         make("Book",
-            "M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z",
-            "M4 19V5M9 8h6"
+            "M2 9l10-5 10 5-10 5z",
+            "M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5",
+            "M22 9v6"
         )
     }
 
@@ -194,15 +195,13 @@ object Ic {
 
     val Phone: ImageVector by lazy {
         make("Phone",
-            "M9.5 2.5H14.5a2.5 2.5 0 0 1 2.5 2.5V19a2.5 2.5 0 0 1 -2.5 2.5H9.5a2.5 2.5 0 0 1 -2.5 -2.5V5a2.5 2.5 0 0 1 2.5 -2.5z",
-            "M11 18.5h2"
+            "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
         )
     }
 
     val Plane: ImageVector by lazy {
         make("Plane",
-            "M21 4L3 11l7 2.5L12.5 21 21 4z",
-            "M10 13.5L21 4"
+            "M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"
         )
     }
 
@@ -322,6 +321,13 @@ object Ic {
         make("Lock",
             "M7.5 11H16.5a2.5 2.5 0 0 1 2.5 2.5V18.5a2.5 2.5 0 0 1 -2.5 2.5H7.5a2.5 2.5 0 0 1 -2.5 -2.5V13.5a2.5 2.5 0 0 1 2.5 -2.5z",
             "M8 11V8a4 4 0 0 1 8 0v3"
+        )
+    }
+
+    val HeartPulse: ImageVector by lazy {
+        make("HeartPulse",
+            "M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z",
+            "M7 11h3l1.5-3 2 5 1.5-2H17"
         )
     }
 }

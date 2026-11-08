@@ -1,9 +1,11 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 
 package com.masrofy.app
 
 import android.content.Context
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -182,7 +184,7 @@ enum class Cat(val key: String, val label: String, val icon: ImageVector, val co
     BILLS("bills", "فواتير", Ic.Receipt, Color(0xFF3B82C4)),
     TRANSPORT("transport", "مواصلات", Ic.Bus, Color(0xFF0E9AA7)),
     FUN("fun", "ترفيه", Ic.Tv, Color(0xFF8A63D2)),
-    HEALTH("health", "صحة", Ic.Heart, Color(0xFFD8512D)),
+    HEALTH("health", "صحة", Ic.HeartPulse, Color(0xFFD8512D)),
     EDUCATION("education", "تعليم", Ic.Book, Color(0xFF5B8C2A)),
     CAFE("cafe", "كافيه", Ic.Cafe, Color(0xFFA8741A)),
     GIFTS("gifts", "هدايا", Ic.Gift, Color(0xFFD94A7E)),
@@ -376,7 +378,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
 
     val darkTheme = isSystemInDarkTheme()
     val view = LocalView.current
-    val greenTop = tab == 0 && moreScreen.isEmpty() && invScreen == null
+    val greenTop = tab == 0 && moreScreen.isEmpty() && invScreen == null && !showSheet
     SideEffect {
         val w = (view.context as? android.app.Activity)?.window
         if (w != null) {
@@ -386,60 +388,30 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
     }
 
     val screen = invScreen
-    if (moreScreen.isNotEmpty()) {
-        BackHandler { moreScreen = "" }
-        when (moreScreen) {
-            "calc" -> CalculatorScreen(
-                onBack = { moreScreen = "" },
-                onUseAmount = { v ->
-                    prefill = v
-                    editingTx = null
-                    showSheet = true
-                    sheetIncome = false
-                    tab = 0
-                    moreScreen = ""
-                }
-            )
-            "goals" -> GoalsScreen(
-                goals = goals,
-                onBack = { moreScreen = "" },
-                onSave = {
-                    goals = it
-                    saveGoals(store, it)
-                }
-            )
-            "notif" -> NotificationsScreen(onBack = { moreScreen = "" })
-            "rec" -> RecurringScreen(
-                store = store,
-                onBack = { moreScreen = "" },
-                onChanged = { items = applyRecurring(store) }
-            )
-            "catb" -> CategoryBudgetsScreen(
-                store = store,
-                txs = items,
-                onBack = { moreScreen = "" },
-                onChanged = { catBudgets = loadCatBudgets(store) }
-            )
-            "clients" -> ClientsScreen(
-                clients = clients,
-                invoices = invoices,
-                onBack = { moreScreen = "" },
-                onSave = {
-                    clients = it.sortedBy { c -> c.name }
-                    invStore.saveClients(clients)
-                }
-            )
-            "backup" -> BackupScreen(
-                store = store,
-                invStore = invStore,
-                onBack = { moreScreen = "" },
-                onRestored = {
-                    reloadAll()
-                    moreScreen = ""
-                }
-            )
-            else -> moreScreen = ""
+    if (showSheet) {
+        BackHandler {
+            showSheet = false
+            prefill = null
         }
+        AddSheet(
+            initial = editingTx,
+            prefillAmount = prefill,
+            initialIncome = sheetIncome,
+            onBack = {
+                showSheet = false
+                prefill = null
+            },
+            onSave = { tx ->
+                val old = items.firstOrNull { it.id == tx.id }
+                if (old != null && old.photo != tx.photo) Receipts.delete(context, old.photo)
+                val exists = items.any { it.id == tx.id }
+                items = (if (exists) items.map { if (it.id == tx.id) tx else it } else listOf(tx) + items)
+                    .sortedByDescending { it.createdAt }
+                store.save(items)
+                showSheet = false
+                prefill = null
+            }
+        )
     } else if (screen != null) {
         BackHandler {
             invScreen = if (screen is InvScreen.Edit && screen.id != null) InvScreen.Show(screen.id) else null
@@ -502,6 +474,92 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                 }
             }
         }
+    } else if (moreScreen.isNotEmpty()) {
+        BackHandler { moreScreen = "" }
+        when (moreScreen) {
+            "calc" -> CalculatorScreen(
+                onBack = { moreScreen = "" },
+                onUseAmount = { v ->
+                    prefill = v
+                    editingTx = null
+                    showSheet = true
+                    sheetIncome = false
+                    tab = 0
+                    moreScreen = ""
+                }
+            )
+            "goals" -> GoalsScreen(
+                goals = goals,
+                onBack = { moreScreen = "" },
+                onSave = {
+                    goals = it
+                    saveGoals(store, it)
+                }
+            )
+            "notif" -> NotificationsScreen(onBack = { moreScreen = "" })
+            "rec" -> RecurringScreen(
+                store = store,
+                onBack = { moreScreen = "" },
+                onChanged = { items = applyRecurring(store) }
+            )
+            "catb" -> CategoryBudgetsScreen(
+                store = store,
+                txs = items,
+                onBack = { moreScreen = "" },
+                onChanged = { catBudgets = loadCatBudgets(store) }
+            )
+            "clients" -> ClientsScreen(
+                clients = clients,
+                invoices = invoices,
+                onBack = { moreScreen = "" },
+                onSave = {
+                    clients = it.sortedBy { c -> c.name }
+                    invStore.saveClients(clients)
+                }
+            )
+            "backup" -> BackupScreen(
+                store = store,
+                invStore = invStore,
+                onBack = { moreScreen = "" },
+                onRestored = {
+                    reloadAll()
+                    moreScreen = ""
+                }
+            )
+            "invoices" -> {
+                Scaffold(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                    topBar = {
+                        ScreenBar("الفواتير", { moreScreen = "" }) {
+                            IconButton(onClick = { invScreen = InvScreen.Edit(null) }) {
+                                Icon(Ic.Plus, contentDescription = "فاتورة جديدة", tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                ) { pad ->
+                    InvoicesScreen(
+                        invoices = invoices,
+                        biz = biz,
+                        onOpen = { invScreen = InvScreen.Show(it.id) },
+                        onEditBusiness = { showBiz = true },
+                        modifier = Modifier.padding(pad)
+                    )
+                }
+                if (showBiz) {
+                    BusinessDialog(
+                        current = biz,
+                        onDismiss = { showBiz = false },
+                        onSave = {
+                            biz = it
+                            invStore.saveBusiness(it)
+                            showBiz = false
+                        }
+                    )
+                }
+            }
+            else -> moreScreen = ""
+        }
     } else {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -515,14 +573,10 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     tab = tab,
                     onTab = { tab = it },
                     onCenter = {
-                        if (tab == 1) {
-                            invScreen = InvScreen.Edit(null)
-                        } else {
-                            editingTx = null
-                            prefill = null
-                            sheetIncome = false
-                            showSheet = true
-                        }
+                        editingTx = null
+                        prefill = null
+                        sheetIncome = false
+                        showSheet = true
                     }
                 )
             }
@@ -530,12 +584,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
             when (tab) {
                 0 -> HomeScreen(
                     txs = items,
-                    monthOffset = monthOffset,
-                    onMonthChange = { monthOffset = it },
-                    budget = budget,
-                    catBudgets = catBudgets,
                     userName = userName,
-                    goals = goals,
                     onEditName = { showName = true },
                     onQuickAdd = { income ->
                         editingTx = null
@@ -543,18 +592,22 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                         sheetIncome = income
                         showSheet = true
                     },
-                    onNewInvoice = {
-                        tab = 1
-                        invScreen = InvScreen.Edit(null)
-                    },
+                    onNewInvoice = { invScreen = InvScreen.Edit(null) },
                     onOpenCalc = { moreScreen = "calc" },
                     onOpenNotif = { moreScreen = "notif" },
-                    onOpenGoals = { moreScreen = "goals" },
                     onOpenMore = { moreScreen = it },
-                    onSetBudget = { value ->
-                        budget = value
-                        store.budget = value
+                    onSeeAll = { tab = 1 },
+                    onEdit = { tx ->
+                        editingTx = tx
+                        prefill = null
+                        showSheet = true
                     },
+                    modifier = Modifier.padding(pad)
+                )
+                1 -> TransactionsScreen(
+                    txs = items,
+                    monthOffset = monthOffset,
+                    onMonthChange = { monthOffset = it },
                     onEdit = { tx ->
                         editingTx = tx
                         prefill = null
@@ -567,49 +620,21 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     },
                     modifier = Modifier.padding(pad)
                 )
-                1 -> InvoicesScreen(
-                    invoices = invoices,
-                    biz = biz,
-                    onOpen = { invScreen = InvScreen.Show(it.id) },
-                    onEditBusiness = { showBiz = true },
-                    modifier = Modifier.padding(pad)
-                )
                 2 -> StatsScreen(
                     txs = items,
                     monthOffset = monthOffset,
                     onMonthChange = { monthOffset = it },
                     catBudgets = catBudgets,
+                    budget = budget,
+                    onSetBudget = { value ->
+                        budget = value
+                        store.budget = value
+                    },
                     modifier = Modifier.padding(pad)
                 )
                 else -> MoreScreen(
                     onOpen = { moreScreen = it },
                     modifier = Modifier.padding(pad)
-                )
-            }
-        }
-
-        if (showSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showSheet = false
-                    prefill = null
-                },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            ) {
-                AddSheet(
-                    initial = editingTx,
-                    prefillAmount = prefill,
-                    initialIncome = sheetIncome,
-                    onSave = { tx ->
-                        val old = items.firstOrNull { it.id == tx.id }
-                        if (old != null && old.photo != tx.photo) Receipts.delete(context, old.photo)
-                        val exists = items.any { it.id == tx.id }
-                        items = (if (exists) items.map { if (it.id == tx.id) tx else it } else listOf(tx) + items)
-                            .sortedByDescending { it.createdAt }
-                        store.save(items)
-                        showSheet = false
-                        prefill = null
-                    }
                 )
             }
         }
@@ -660,9 +685,9 @@ private fun MasrofyBottomBar(tab: Int, onTab: (Int) -> Unit, onCenter: () -> Uni
             verticalAlignment = Alignment.CenterVertically
         ) {
             BarItem("الرئيسية", Ic.Home, tab == 0, Modifier.weight(1f)) { onTab(0) }
-            BarItem("الفواتير", Ic.Receipt, tab == 1, Modifier.weight(1f)) { onTab(1) }
+            BarItem("العمليات", Ic.Receipt, tab == 1, Modifier.weight(1f)) { onTab(1) }
             Spacer(Modifier.weight(1f))
-            BarItem("الإحصائيات", Ic.Pie, tab == 2, Modifier.weight(1f)) { onTab(2) }
+            BarItem("التحليلات", Ic.Pie, tab == 2, Modifier.weight(1f)) { onTab(2) }
             BarItem("المزيد", Ic.More, tab == 3, Modifier.weight(1f)) { onTab(3) }
         }
         Box(
@@ -735,53 +760,20 @@ fun MonthNav(offset: Int, onChange: (Int) -> Unit) {
 @Composable
 fun HomeScreen(
     txs: List<Tx>,
-    monthOffset: Int,
-    onMonthChange: (Int) -> Unit,
-    budget: Double,
-    catBudgets: Map<String, Double>,
     userName: String,
-    goals: List<Goal>,
     onEditName: () -> Unit,
     onQuickAdd: (Boolean) -> Unit,
     onNewInvoice: () -> Unit,
     onOpenCalc: () -> Unit,
     onOpenNotif: () -> Unit,
-    onOpenGoals: () -> Unit,
     onOpenMore: (String) -> Unit,
-    onSetBudget: (Double) -> Unit,
+    onSeeAll: () -> Unit,
     onEdit: (Tx) -> Unit,
-    onDelete: (Tx) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val range = remember(monthOffset) { monthRange(monthOffset) }
     val income = txs.filter { it.isIncome }.sumOf { it.amount }
     val spent = txs.filter { !it.isIncome }.sumOf { it.amount }
-    val monthTx = txs.filter { it.createdAt >= range.first && it.createdAt < range.second }
-    val monthIncome = monthTx.filter { it.isIncome }.sumOf { it.amount }
-    val monthSpent = monthTx.filter { !it.isIncome }.sumOf { it.amount }
-
-    var query by rememberSaveable { mutableStateOf("") }
-    var filter by rememberSaveable { mutableStateOf("all") }
-    var pendingDelete by remember { mutableStateOf<Tx?>(null) }
-    var editBudget by remember { mutableStateOf(false) }
-
-    val overs = Cat.entries.filter { c ->
-        val lim = catBudgets[c.key] ?: 0.0
-        lim > 0 && monthTx.filter { !it.isIncome && it.category == c.key }.sumOf { it.amount } > lim
-    }
-
-    val q = query.trim()
-    val shown = monthTx.filter { t ->
-        val okFilter = when (filter) {
-            "all" -> true
-            "income" -> t.isIncome
-            else -> !t.isIncome && t.category == filter
-        }
-        val okQuery = q.isEmpty() ||
-            t.title.contains(q, ignoreCase = true) ||
-            (if (t.isIncome) "دخل" else Cat.of(t.category).label).contains(q, ignoreCase = true)
-        okFilter && okQuery
-    }
+    val recent = txs.sortedByDescending { it.createdAt }.take(5)
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -794,125 +786,259 @@ fun HomeScreen(
                 onEditName = onEditName,
                 onOpenNotif = onOpenNotif,
                 balance = income - spent,
-                income = monthIncome,
-                spent = monthSpent,
-                monthOffset = monthOffset,
-                onMonthChange = onMonthChange,
                 onQuickAdd = onQuickAdd,
                 onNewInvoice = onNewInvoice,
                 onOpenCalc = onOpenCalc,
                 onOpenMore = onOpenMore
             )
         }
-        item { BudgetCard(budget, monthSpent) { editBudget = true } }
-        item { WeekCard(txs) }
-        if (goals.isNotEmpty()) {
-            item { GoalsHomeCard(goals, onOpenGoals) }
-        }
-        if (overs.isNotEmpty()) {
-            item {
-                Row(
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("آخر العمليات", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "عرض الكل",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        Ic.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Text(
-                        "عديت ميزانية: " + overs.joinToString("، ") { it.label },
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-        item {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = { Text("ابحث في العمليات") },
-                leadingIcon = { Icon(Ic.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = { query = "" }) {
-                            Icon(Ic.Close, contentDescription = "مسح البحث")
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    FilterChip(
-                        selected = filter == "all",
-                        onClick = { filter = "all" },
-                        label = { Text("الكل") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = filter == "income",
-                        onClick = { filter = "income" },
-                        label = { Text("دخل") }
-                    )
-                }
-                items(Cat.entries.toList()) { c ->
-                    FilterChip(
-                        selected = filter == c.key,
-                        onClick = { filter = c.key },
-                        label = { Text(c.label) },
-                        leadingIcon = {
-                            Icon(c.icon, contentDescription = null, modifier = Modifier.size(18.dp))
-                        }
-                    )
-                }
-            }
-        }
-        item {
-            Text(
-                "آخر العمليات (${shown.size})",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-        if (shown.isEmpty()) {
-            item {
-                EmptyState(
-                    if (monthTx.isEmpty() && txs.isEmpty()) "لسه مفيش عمليات"
-                    else if (monthTx.isEmpty()) "مفيش عمليات في الشهر ده"
-                    else "مفيش نتائج",
-                    if (txs.isEmpty()) "دوس على + وسجّل أول مصروف" else "جرّب تغيّر البحث أو الفلتر"
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = onSeeAll)
+                        .padding(4.dp)
                 )
             }
+        }
+        if (recent.isEmpty()) {
+            item { EmptyState("لسه مفيش عمليات", "دوس على + وسجّل أول مصروف") }
         } else {
-            items(shown, key = { it.id }) { tx ->
-                TxRow(tx, onClick = { onEdit(tx) }, onDeleteClick = { pendingDelete = tx })
+            item { TxGroupCard(recent, onEdit, null) }
+        }
+    }
+}
+
+/** كارت فيه مجموعة عمليات بينها خطوط فاصلة. */
+@Composable
+private fun TxGroupCard(list: List<Tx>, onClick: (Tx) -> Unit, onLong: ((Tx) -> Unit)?) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            list.forEachIndexed { i, tx ->
+                if (i > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    )
+                }
+                TxLine(tx, onClick = { onClick(tx) }, onLong = if (onLong != null) ({ onLong(tx) }) else null)
             }
         }
     }
+}
 
-    if (editBudget) {
-        BudgetDialog(
-            current = budget,
-            onDismiss = { editBudget = false },
-            onSave = {
-                onSetBudget(it)
-                editBudget = false
+@Composable
+private fun TxLine(tx: Tx, onClick: () -> Unit, onLong: (() -> Unit)?) {
+    val cat = Cat.of(tx.category)
+    val date = remember(tx.createdAt) { SimpleDateFormat("d MMM", latinArabic).format(Date(tx.createdAt)) }
+    val sign = if (tx.isIncome) "+" else "−"
+    val tag = when {
+        tx.ref.startsWith("inv:") -> " · من فاتورة"
+        tx.ref.startsWith("rec:") -> " · متكررة"
+        else -> ""
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLong)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(RoundedCornerShape(15.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                if (tx.isIncome) Ic.Cash else cat.icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    tx.title,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (tx.photo.isNotBlank()) {
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        Ic.Attach,
+                        contentDescription = "مرفق صورة",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
             }
+            Text(
+                "${if (tx.isIncome) "دخل" else cat.label} · $date$tag",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            "\u200E$sign${money(tx.amount)}",
+            color = if (tx.isIncome) incomeColor() else MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.ExtraBold
         )
+    }
+}
+
+/* ---------------- العمليات ---------------- */
+
+@Composable
+fun TransactionsScreen(
+    txs: List<Tx>,
+    monthOffset: Int,
+    onMonthChange: (Int) -> Unit,
+    onEdit: (Tx) -> Unit,
+    onDelete: (Tx) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val range = remember(monthOffset) { monthRange(monthOffset) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var searching by rememberSaveable { mutableStateOf(false) }
+    var filter by rememberSaveable { mutableStateOf("all") }
+    var pendingDelete by remember { mutableStateOf<Tx?>(null) }
+    val q = query.trim()
+
+    val shown = txs.filter { it.createdAt >= range.first && it.createdAt < range.second }
+        .filter { t ->
+            when (filter) {
+                "exp" -> !t.isIncome
+                "income" -> t.isIncome
+                "bills" -> !t.isIncome && t.category == Cat.BILLS.key
+                else -> true
+            }
+        }
+        .filter { t ->
+            q.isEmpty() || t.title.contains(q, ignoreCase = true) ||
+                (if (t.isIncome) "دخل" else Cat.of(t.category).label).contains(q, ignoreCase = true)
+        }
+        .sortedByDescending { it.createdAt }
+
+    val dayFmt = remember { SimpleDateFormat("yyyyMMdd", Locale.US) }
+    val labelFmt = remember { SimpleDateFormat("d MMMM yyyy", latinArabic) }
+    val todayKey = dayFmt.format(Date())
+    val yesterdayKey = dayFmt.format(Date(System.currentTimeMillis() - 24L * 60 * 60 * 1000))
+    val groups = shown.groupBy { dayFmt.format(Date(it.createdAt)) }.entries.toList()
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("العمليات", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+                Surface(
+                    onClick = {
+                        searching = !searching
+                        if (!searching) query = ""
+                    },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            if (searching) Ic.Close else Ic.Search,
+                            contentDescription = "بحث",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+        if (searching) {
+            item {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    placeholder = { Text("ابحث في العمليات") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(listOf("all" to "الكل", "exp" to "مصروفات", "income" to "دخل", "bills" to "فواتير")) { f ->
+                    val on = filter == f.first
+                    Text(
+                        f.second,
+                        color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { filter = f.first }
+                            .padding(horizontal = 18.dp, vertical = 8.dp)
+                    )
+                }
+            }
+        }
+        item { MonthNav(monthOffset, onMonthChange) }
+        if (groups.isEmpty()) {
+            item {
+                EmptyState(
+                    if (txs.isEmpty()) "لسه مفيش عمليات" else "مفيش عمليات هنا",
+                    if (txs.isEmpty()) "دوس على + وسجّل أول مصروف" else "جرّب تغيّر الشهر أو الفلتر"
+                )
+            }
+        } else {
+            groups.forEach { g ->
+                item(key = "h" + g.key) {
+                    Text(
+                        when (g.key) {
+                            todayKey -> "النهاردة"
+                            yesterdayKey -> "أمس"
+                            else -> labelFmt.format(Date(g.value.first().createdAt))
+                        },
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                item(key = "g" + g.key) { TxGroupCard(g.value, onEdit) { pendingDelete = it } }
+            }
+            item {
+                Text(
+                    "اضغط مطوّلاً على أي عملية لحذفها",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 
     pendingDelete?.let { tx ->
@@ -946,10 +1072,6 @@ private fun HomeTop(
     onEditName: () -> Unit,
     onOpenNotif: () -> Unit,
     balance: Double,
-    income: Double,
-    spent: Double,
-    monthOffset: Int,
-    onMonthChange: (Int) -> Unit,
     onQuickAdd: (Boolean) -> Unit,
     onNewInvoice: () -> Unit,
     onOpenCalc: () -> Unit,
@@ -988,10 +1110,7 @@ private fun HomeTop(
                 },
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            BalanceCard(
-                balance, income, spent, monthOffset, onMonthChange,
-                onQuickAdd, onNewInvoice, onOpenCalc
-            )
+            BalanceCard(balance, onQuickAdd, onNewInvoice, onOpenCalc)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("خدماتي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -1224,10 +1343,6 @@ private fun NameDialog(current: String, onDismiss: () -> Unit, onSave: (String) 
 @Composable
 private fun BalanceCard(
     balance: Double,
-    income: Double,
-    spent: Double,
-    monthOffset: Int,
-    onMonthChange: (Int) -> Unit,
     onQuickAdd: (Boolean) -> Unit,
     onNewInvoice: () -> Unit,
     onOpenCalc: () -> Unit
@@ -1239,30 +1354,11 @@ private fun BalanceCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "رصيدك الحالي",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { if (monthOffset < 60) onMonthChange(monthOffset + 1) }, modifier = Modifier.size(30.dp)) {
-                        Icon(Ic.ChevRight, contentDescription = "الشهر السابق", modifier = Modifier.size(20.dp))
-                    }
-                    Text(
-                        monthLabel(monthOffset),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    IconButton(onClick = { onMonthChange(monthOffset - 1) }, enabled = monthOffset > 0, modifier = Modifier.size(30.dp)) {
-                        Icon(Ic.ChevLeft, contentDescription = "الشهر التالي", modifier = Modifier.size(20.dp))
-                    }
-                }
-            }
+            Text(
+                "رصيدك الحالي",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     money(balance),
@@ -1277,10 +1373,6 @@ private fun BalanceCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 9.dp)
                 )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(modifier = Modifier.weight(1f)) { MiniStat("دخل الشهر", income, Ic.Down, incomeColor()) }
-                Box(modifier = Modifier.weight(1f)) { MiniStat("مصروف الشهر", spent, Ic.Up, MaterialTheme.colorScheme.error) }
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 QuickAction("مصروف", Ic.Up, Modifier.weight(1f)) { onQuickAdd(false) }
@@ -1529,8 +1621,11 @@ fun StatsScreen(
     monthOffset: Int,
     onMonthChange: (Int) -> Unit,
     catBudgets: Map<String, Double> = emptyMap(),
+    budget: Double = 0.0,
+    onSetBudget: (Double) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var editBudget by remember { mutableStateOf(false) }
     val range = remember(monthOffset) { monthRange(monthOffset) }
     val monthItems = txs.filter { !it.isIncome && it.createdAt >= range.first && it.createdAt < range.second }
     val total = monthItems.sumOf { it.amount }
@@ -1546,13 +1641,15 @@ fun StatsScreen(
     ) {
         item {
             Text(
-                "الإحصائيات",
+                "التحليلات",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
         }
         item { MonthNav(monthOffset, onMonthChange) }
         item { DonutCard(total, parts) }
+        item { WeekCard(txs) }
+        item { BudgetCard(budget, total) { editBudget = true } }
         if (parts.isEmpty()) {
             item {
                 Text(
@@ -1567,6 +1664,17 @@ fun StatsScreen(
                 CategoryRow(part.first, part.second, total, largest, catBudgets[part.first.key] ?: 0.0)
             }
         }
+    }
+
+    if (editBudget) {
+        BudgetDialog(
+            current = budget,
+            onDismiss = { editBudget = false },
+            onSave = {
+                onSetBudget(it)
+                editBudget = false
+            }
+        )
     }
 }
 
@@ -1688,6 +1796,7 @@ private fun CategoryRow(cat: Cat, value: Double, total: Double, largest: Double,
 fun AddSheet(
     initial: Tx?,
     onSave: (Tx) -> Unit,
+    onBack: () -> Unit,
     prefillAmount: Double? = null,
     initialIncome: Boolean = false
 ) {
@@ -1710,122 +1819,116 @@ fun AddSheet(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            if (initial == null) "إضافة عملية" else "تعديل العملية",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+        ScreenBar(
+            if (initial != null) "تعديل العملية" else if (isIncome) "دخل جديد" else "مصروف جديد",
+            onBack
         )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            TypeButton("مصروف", !isIncome, Modifier.weight(1f)) { isIncome = false }
-            TypeButton("دخل", isIncome, Modifier.weight(1f)) { isIncome = true }
-        }
-
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f))
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text("المبلغ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        amountText.ifEmpty { "0" },
-                        fontSize = 46.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (amountText.isEmpty()) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "ج.م",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 10.dp)
-                    )
-                }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                TypeButton("مصروف", !isIncome, Modifier.weight(1f)) { isIncome = false }
+                TypeButton("دخل", isIncome, Modifier.weight(1f)) { isIncome = true }
             }
-        }
 
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("الوصف (اختياري)") },
-            placeholder = { Text("مثلاً: غدا مع الشباب") },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (!isIncome) {
-            Text(
-                "الفئة",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Cat.entries.chunked(4).forEach { rowItems ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        rowItems.forEach { item ->
-                            Box(modifier = Modifier.weight(1f)) {
-                                CatTile(item, cat == item) { cat = item }
-                            }
-                        }
-                        repeat(4 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            amountText.ifEmpty { "0" },
+                            fontSize = 54.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (amountText.isEmpty()) MaterialTheme.colorScheme.outline
+                            else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "ج.م",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
                     }
                 }
             }
-        }
 
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(
-                    listOf("1", "2", "3"),
-                    listOf("4", "5", "6"),
-                    listOf("7", "8", "9"),
-                    listOf(".", "0", "⌫")
-                ).forEach { r ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        r.forEach { k ->
-                            KeypadKey(k, Modifier.weight(1f)) {
-                                amountText = when (k) {
-                                    "⌫" -> amountText.dropLast(1)
-                                    "." -> if (amountText.contains('.')) amountText
-                                    else if (amountText.isEmpty()) "0." else "$amountText."
-                                    else -> if (amountText.length >= 10) amountText
-                                    else if (amountText == "0") k else amountText + k
+            if (!isIncome) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Cat.entries.chunked(4).forEach { rowItems ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                            rowItems.forEach { item ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    CatTile(item, cat == item) { cat = item }
+                                }
+                            }
+                            repeat(4 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                }
+            }
+
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf(
+                        listOf("1", "2", "3"),
+                        listOf("4", "5", "6"),
+                        listOf("7", "8", "9"),
+                        listOf(".", "0", "⌫")
+                    ).forEach { r ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            r.forEach { k ->
+                                KeypadKey(k, Modifier.weight(1f)) {
+                                    amountText = when (k) {
+                                        "⌫" -> amountText.dropLast(1)
+                                        "." -> if (amountText.contains('.')) amountText
+                                        else if (amountText.isEmpty()) "0." else "$amountText."
+                                        else -> if (amountText.length >= 10) amountText
+                                        else if (amountText == "0") k else amountText + k
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        PhotoSection(
-            photo = photo,
-            key = initial?.id ?: newId,
-            onChange = { name ->
-                if (photo.isNotBlank() && photo != (initial?.photo ?: "")) Receipts.delete(context, photo)
-                photo = name
-            }
-        )
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("الوصف (اختياري)") },
+                placeholder = { Text("مثلاً: غدا مع الشباب") },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            PhotoSection(
+                photo = photo,
+                key = initial?.id ?: newId,
+                onChange = { name ->
+                    if (photo.isNotBlank() && photo != (initial?.photo ?: "")) Receipts.delete(context, photo)
+                    photo = name
+                }
+            )
+            Spacer(Modifier.height(4.dp))
+        }
 
         Button(
             onClick = {
@@ -1848,14 +1951,17 @@ fun AddSheet(
                 }
             },
             enabled = canSave,
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .height(54.dp)
         ) {
             Text(
-                if (initial != null) "حفظ التعديل" else if (isIncome) "حفظ الدخل" else "حفظ المصروف",
-                fontWeight = FontWeight.SemiBold
+                if (initial != null) "حفظ التعديل" else if (isIncome) "تأكيد الدخل" else "تأكيد المصروف",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 16.sp
             )
         }
     }
@@ -1867,30 +1973,24 @@ private fun CatTile(cat: Cat, selected: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (selected) scheme.primary else scheme.primaryContainer)
             .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 11.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(54.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(if (selected) scheme.primary else scheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                cat.icon,
-                contentDescription = null,
-                tint = if (selected) scheme.onPrimary else scheme.primary,
-                modifier = Modifier.size(25.dp)
-            )
-        }
+        Icon(
+            cat.icon,
+            contentDescription = null,
+            tint = if (selected) scheme.onPrimary else scheme.primary,
+            modifier = Modifier.size(26.dp)
+        )
         Text(
             cat.label,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
+            color = if (selected) scheme.onPrimary else scheme.onPrimaryContainer,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

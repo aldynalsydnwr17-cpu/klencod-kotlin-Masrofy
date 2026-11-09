@@ -1071,7 +1071,7 @@ fun TransactionsScreen(
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
-                item(key = "g" + g.key) { TxGroupCard(g.value, onEdit) { pendingDelete = it } }
+                item(key = "g" + g.key) { TxGroupCard(g.value, onEdit, { pendingDelete = it }) }
             }
             item {
                 Text(

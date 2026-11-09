@@ -196,7 +196,7 @@ fun PhotoSection(photo: String, key: Long, onChange: (String) -> Unit) {
                         .size(72.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { viewing = true }
+                        .bounceClick { viewing = true }
                 ) {
                     if (bmp != null) {
                         Image(
@@ -231,7 +231,7 @@ fun PhotoSection(photo: String, key: Long, onChange: (String) -> Unit) {
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.Black)
-                    .clickable { viewing = false }
+                    .bounceClick { viewing = false }
             ) {
                 if (big != null) {
                     Image(

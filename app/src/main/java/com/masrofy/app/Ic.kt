@@ -348,4 +348,50 @@ object Ic {
             "M15.8 19.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z"
         )
     }
+
+    val Car: ImageVector by lazy {
+        make("Car",
+            "M5 12l1.6-4.6A2 2 0 0 1 8.5 6h7a2 2 0 0 1 1.9 1.4L19 12",
+            "M4 12h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1.5v1.5M5.5 18H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1",
+            "M5.5 18v1.5",
+            "M7 18h10",
+            "M6.9 14.8a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0z",
+            "M15.9 14.8a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0z"
+        )
+    }
+
+    val Gamepad: ImageVector by lazy {
+        make("Gamepad",
+            "M7 8h10a4 4 0 0 1 3.9 4.9l-.7 3.4A2.2 2.2 0 0 1 16 17l-1-1.5H9L8 17a2.2 2.2 0 0 1-4.200-.7l-.7-3.400A4 4 0 0 1 7 8z",
+            "M8 10.500v3M6.500 12h3",
+            "M15.500 11.200h.01M17.500 13h.01"
+        )
+    }
+
+    val Mobile: ImageVector by lazy {
+        make("Mobile",
+            "M7 2.5h10a1.500 1.500 0 0 1 1.500 1.500v16a1.500 1.500 0 0 1-1.500 1.500H7A1.500 1.500 0 0 1 5.500 20V4A1.500 1.500 0 0 1 7 2.500z",
+            "M10.500 18.500h3"
+        )
+    }
+
+    val BarChart: ImageVector by lazy {
+        make("BarChart",
+            "M4 20h16",
+            "M7 20v-7M12 20V6M17 20v-10"
+        )
+    }
+
+    val Calendar: ImageVector by lazy {
+        make("Calendar",
+            "M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z",
+            "M4 10h16M8 3v4M16 3v4"
+        )
+    }
+
+    val Sparkle: ImageVector by lazy {
+        make("Sparkle",
+            "M4 6l2 2M12 2v3M20 6l-2 2"
+        )
+    }
 }

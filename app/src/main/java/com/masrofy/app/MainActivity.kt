@@ -2,6 +2,18 @@
 
 package com.masrofy.app
 
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.animateColorAsState
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -180,15 +192,15 @@ class Store(context: Context) {
 
 enum class Cat(val key: String, val label: String, val icon: ImageVector, val color: Color) {
     FOOD("food", "أكل وشرب", Ic.Food, Color(0xFFF2A33A)),
-    SHOPPING("shopping", "تسوق", Ic.Bag, Color(0xFFE0568A)),
+    SHOPPING("shopping", "تسوق", Ic.Cart, Color(0xFFE0568A)),
     BILLS("bills", "فواتير", Ic.Receipt, Color(0xFF3B82C4)),
-    TRANSPORT("transport", "مواصلات", Ic.Bus, Color(0xFF0E9AA7)),
-    FUN("fun", "ترفيه", Ic.Tv, Color(0xFF8A63D2)),
-    HEALTH("health", "صحة", Ic.HeartPulse, Color(0xFFD8512D)),
+    TRANSPORT("transport", "مواصلات", Ic.Car, Color(0xFF0E9AA7)),
+    FUN("fun", "ترفيه", Ic.Gamepad, Color(0xFF8A63D2)),
+    HEALTH("health", "صحة", Ic.Heart, Color(0xFFD8512D)),
     EDUCATION("education", "تعليم", Ic.Book, Color(0xFF5B8C2A)),
     CAFE("cafe", "كافيه", Ic.Cafe, Color(0xFFA8741A)),
     GIFTS("gifts", "هدايا", Ic.Gift, Color(0xFFD94A7E)),
-    PHONE("phone", "اتصالات", Ic.Phone, Color(0xFF4F6BDB)),
+    PHONE("phone", "موبايل", Ic.Mobile, Color(0xFF4F6BDB)),
     TRAVEL("travel", "سفر", Ic.Plane, Color(0xFF2A9BD1)),
     OTHER("other", "أخرى", Ic.Dots, Color(0xFF6B7C76));
 
@@ -322,6 +334,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
     var clients by remember { mutableStateOf(invStore.loadClients()) }
     var biz by remember { mutableStateOf(invStore.loadBusiness()) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    var txSearch by remember { mutableStateOf(false) }
     var monthOffset by rememberSaveable { mutableIntStateOf(0) }
     var showSheet by remember { mutableStateOf(false) }
     var editingTx by remember { mutableStateOf<Tx?>(null) }
@@ -383,7 +396,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
         val w = (view.context as? android.app.Activity)?.window
         if (w != null) {
             // أيقونات شريط الحالة بيضا على الهيدر الأخضر بتاع الرئيسية، وغامقة في باقي الصفحات
-            WindowCompat.getInsetsController(w, view).isAppearanceLightStatusBars = !(greenTop || darkTheme)
+            WindowCompat.getInsetsController(w, view).isAppearanceLightStatusBars = false
         }
     }
 
@@ -563,10 +576,26 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
     } else {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            contentWindowInsets = if (tab == 0) {
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-            } else {
-                WindowInsets.safeDrawing
+            contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+            topBar = {
+                if (tab != 0) {
+                    ScreenBar(
+                        when (tab) {
+                            1 -> "العمليات"
+                            2 -> "التحليلات"
+                            else -> "المزيد"
+                        },
+                        { tab = 0 }
+                    ) {
+                        if (tab == 1) {
+                            IconButton(onClick = {
+                                txSearch = !txSearch
+                            }) {
+                                Icon(if (txSearch) Ic.Close else Ic.Search, contentDescription = "بحث", tint = Color.White)
+                            }
+                        }
+                    }
+                }
             },
             bottomBar = {
                 MasrofyBottomBar(
@@ -581,7 +610,14 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                 )
             }
         ) { pad ->
-            when (tab) {
+            AnimatedContent(
+                targetState = tab,
+                transitionSpec = {
+                    (fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 24 }) togetherWith fadeOut(tween(120))
+                },
+                label = "tabs"
+            ) { currentTab ->
+            when (currentTab) {
                 0 -> HomeScreen(
                     txs = items,
                     userName = userName,
@@ -606,6 +642,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                 )
                 1 -> TransactionsScreen(
                     txs = items,
+                    searching = txSearch,
                     monthOffset = monthOffset,
                     onMonthChange = { monthOffset = it },
                     onEdit = { tx ->
@@ -636,6 +673,7 @@ fun MasrofyApp(store: Store, invStore: InvoiceStore) {
                     onOpen = { moreScreen = it },
                     modifier = Modifier.padding(pad)
                 )
+            }
             }
         }
 
@@ -687,20 +725,20 @@ private fun MasrofyBottomBar(tab: Int, onTab: (Int) -> Unit, onCenter: () -> Uni
             BarItem("الرئيسية", Ic.Home, tab == 0, Modifier.weight(1f)) { onTab(0) }
             BarItem("العمليات", Ic.Receipt, tab == 1, Modifier.weight(1f)) { onTab(1) }
             Spacer(Modifier.weight(1f))
-            BarItem("التحليلات", Ic.Pie, tab == 2, Modifier.weight(1f)) { onTab(2) }
+            BarItem("التحليلات", Ic.BarChart, tab == 2, Modifier.weight(1f)) { onTab(2) }
             BarItem("المزيد", Ic.More, tab == 3, Modifier.weight(1f)) { onTab(3) }
         }
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .bounceClick(onCenter)
                 .size(64.dp)
                 .shadow(10.dp, CircleShape)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(4.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-                .clickable(onClick = onCenter),
+                .background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -719,11 +757,26 @@ private fun BarItem(label: String, icon: ImageVector, selected: Boolean, modifie
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .clickable(onClick = onClick),
+            .bounceClick(onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+        val pop by animateFloatAsState(
+            if (selected) 1.18f else 1f,
+            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+            label = "tabpop"
+        )
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier
+                .size(24.dp)
+                .graphicsLayer {
+                    scaleX = pop
+                    scaleY = pop
+                }
+        )
         Text(
             label,
             color = color,
@@ -792,42 +845,57 @@ fun HomeScreen(
                 onOpenMore = onOpenMore
             )
         }
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("آخر العمليات", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(
-                    "عرض الكل",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(onClick = onSeeAll)
-                        .padding(4.dp)
-                )
-            }
-        }
         if (recent.isEmpty()) {
             item { EmptyState("لسه مفيش عمليات", "دوس على + وسجّل أول مصروف") }
         } else {
-            item { TxGroupCard(recent, onEdit, null) }
+            item {
+                TxGroupCard(recent, onEdit, null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("آخر العمليات", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .bounceClick(onSeeAll)
+                                .padding(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Ic.ChevLeft, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                            Text(
+                                "عرض الكل",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 /** كارت فيه مجموعة عمليات بينها خطوط فاصلة. */
 @Composable
-private fun TxGroupCard(list: List<Tx>, onClick: (Tx) -> Unit, onLong: ((Tx) -> Unit)?) {
+private fun TxGroupCard(
+    list: List<Tx>,
+    onClick: (Tx) -> Unit,
+    onLong: ((Tx) -> Unit)?,
+    header: (@Composable () -> Unit)? = null
+) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
+            header?.invoke()
             list.forEachIndexed { i, tx ->
                 if (i > 0) {
                     HorizontalDivider(
@@ -835,17 +903,16 @@ private fun TxGroupCard(list: List<Tx>, onClick: (Tx) -> Unit, onLong: ((Tx) -> 
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
                     )
                 }
-                TxLine(tx, onClick = { onClick(tx) }, onLong = if (onLong != null) ({ onLong(tx) }) else null)
+                TxLine(tx, i, onClick = { onClick(tx) }, onLong = if (onLong != null) ({ onLong(tx) }) else null)
             }
         }
     }
 }
 
 @Composable
-private fun TxLine(tx: Tx, onClick: () -> Unit, onLong: (() -> Unit)?) {
+private fun TxLine(tx: Tx, index: Int, onClick: () -> Unit, onLong: (() -> Unit)?) {
     val cat = Cat.of(tx.category)
-    val date = remember(tx.createdAt) { SimpleDateFormat("d MMM", latinArabic).format(Date(tx.createdAt)) }
-    val sign = if (tx.isIncome) "+" else "−"
+    val sign = if (tx.isIncome) "+" else "-"
     val tag = when {
         tx.ref.startsWith("inv:") -> " · من فاتورة"
         tx.ref.startsWith("rec:") -> " · متكررة"
@@ -854,7 +921,8 @@ private fun TxLine(tx: Tx, onClick: () -> Unit, onLong: (() -> Unit)?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLong)
+            .appear(index * 60)
+            .bounceCombined(onClick, onLong)
             .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -892,15 +960,16 @@ private fun TxLine(tx: Tx, onClick: () -> Unit, onLong: (() -> Unit)?) {
                 }
             }
             Text(
-                "${if (tx.isIncome) "دخل" else cat.label} · $date$tag",
+                "${if (tx.isIncome) "دخل" else cat.label}$tag",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Text(
-            "\u200E$sign${money(tx.amount)}",
-            color = if (tx.isIncome) incomeColor() else MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.ExtraBold
+            "\u200E$sign ${money(tx.amount)} ج.م",
+            color = if (tx.isIncome) incomeColor() else MaterialTheme.colorScheme.error,
+            fontWeight = FontWeight.ExtraBold,
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
@@ -910,6 +979,7 @@ private fun TxLine(tx: Tx, onClick: () -> Unit, onLong: (() -> Unit)?) {
 @Composable
 fun TransactionsScreen(
     txs: List<Tx>,
+    searching: Boolean,
     monthOffset: Int,
     onMonthChange: (Int) -> Unit,
     onEdit: (Tx) -> Unit,
@@ -918,7 +988,6 @@ fun TransactionsScreen(
 ) {
     val range = remember(monthOffset) { monthRange(monthOffset) }
     var query by rememberSaveable { mutableStateOf("") }
-    var searching by rememberSaveable { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("all") }
     var pendingDelete by remember { mutableStateOf<Tx?>(null) }
     val q = query.trim()
@@ -949,32 +1018,6 @@ fun TransactionsScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("العمليات", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-                Surface(
-                    onClick = {
-                        searching = !searching
-                        if (!searching) query = ""
-                    },
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(44.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            if (searching) Ic.Close else Ic.Search,
-                            contentDescription = "بحث",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-        }
         if (searching) {
             item {
                 OutlinedTextField(
@@ -999,7 +1042,7 @@ fun TransactionsScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
                             .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { filter = f.first }
+                            .bounceClick { filter = f.first }
                             .padding(horizontal = 18.dp, vertical = 8.dp)
                     )
                 }
@@ -1116,7 +1159,7 @@ private fun HomeTop(
                 Row(modifier = Modifier.fillMaxWidth()) {
                     ServiceItem("متكرر", Ic.Repeat, Modifier.weight(1f)) { onOpenMore("rec") }
                     ServiceItem("أهداف", Ic.Target, Modifier.weight(1f)) { onOpenMore("goals") }
-                    ServiceItem("ميزانيات", Ic.Wallet, Modifier.weight(1f)) { onOpenMore("catb") }
+                    ServiceItem("إيصال", Ic.Cam, Modifier.weight(1f)) { onQuickAdd(false) }
                     ServiceItem("عملاء", Ic.Users, Modifier.weight(1f)) { onOpenMore("clients") }
                 }
             }
@@ -1185,7 +1228,7 @@ private fun ServiceItem(label: String, icon: ImageVector, modifier: Modifier, on
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .bounceClick(onClick)
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -1209,7 +1252,7 @@ private fun QuickAction(label: String, icon: ImageVector, modifier: Modifier, on
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .bounceClick(onClick)
             .padding(vertical = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -1262,7 +1305,7 @@ private fun WeekCard(txs: List<Tx>) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("آخر 7 أيام", fontWeight = FontWeight.SemiBold)
+                Text("المصروفات الأسبوعية", fontWeight = FontWeight.Bold)
                 Text(
                     "صرفت " + money(total) + " ج.م",
                     style = MaterialTheme.typography.labelMedium,
@@ -1354,25 +1397,43 @@ private fun BalanceCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text(
-                "رصيدك الحالي",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    money(balance),
-                    fontSize = 38.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    "ج.م",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 9.dp)
-                )
+            val shownBalance = remember { Animatable(0f) }
+            LaunchedEffect(balance) { shownBalance.animateTo(balance.toFloat(), tween(900)) }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Ic.Wallet, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                }
+                Column {
+                    Text(
+                        "رصيدك الحالي",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            money(shownBalance.value.toDouble()),
+                            fontSize = 34.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "ج.م",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 7.dp)
+                        )
+                    }
+                }
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 QuickAction("مصروف", Ic.Up, Modifier.weight(1f)) { onQuickAdd(false) }
@@ -1626,7 +1687,21 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     var editBudget by remember { mutableStateOf(false) }
-    val range = remember(monthOffset) { monthRange(monthOffset) }
+    var mode by rememberSaveable { mutableIntStateOf(0) }
+    val range = remember(mode) {
+        if (mode == 2) {
+            val c = Calendar.getInstance()
+            c.set(Calendar.MONTH, 0)
+            c.set(Calendar.DAY_OF_MONTH, 1)
+            c.set(Calendar.HOUR_OF_DAY, 0)
+            c.set(Calendar.MINUTE, 0)
+            c.set(Calendar.SECOND, 0)
+            c.set(Calendar.MILLISECOND, 0)
+            val start = c.timeInMillis
+            c.add(Calendar.YEAR, 1)
+            Pair(start, c.timeInMillis)
+        } else monthRange(mode)
+    }
     val monthItems = txs.filter { !it.isIncome && it.createdAt >= range.first && it.createdAt < range.second }
     val total = monthItems.sumOf { it.amount }
     val parts = monthItems
@@ -1640,14 +1715,19 @@ fun StatsScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text(
-                "التحليلات",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(3.dp)
+            ) {
+                listOf("هذا الشهر", "الشهر الماضي", "السنة").forEachIndexed { i, label ->
+                    TypeButton(label, mode == i, Modifier.weight(1f)) { mode = i }
+                }
+            }
         }
-        item { MonthNav(monthOffset, onMonthChange) }
-        item { DonutCard(total, parts) }
+        item { DonutCard(total, parts, if (mode == 2) "إجمالي السنة" else "إجمالي المصروفات") }
         item { WeekCard(txs) }
         item { BudgetCard(budget, total) { editBudget = true } }
         if (parts.isEmpty()) {
@@ -1660,6 +1740,9 @@ fun StatsScreen(
             }
         } else {
             val largest = parts.first().second
+            item {
+                Text("أكثر التصنيفات إنفاقاً", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
             items(parts, key = { it.first.key }) { part ->
                 CategoryRow(part.first, part.second, total, largest, catBudgets[part.first.key] ?: 0.0)
             }
@@ -1679,61 +1762,76 @@ fun StatsScreen(
 }
 
 @Composable
-private fun DonutCard(total: Double, parts: List<Pair<Cat, Double>>) {
+private fun DonutCard(total: Double, parts: List<Pair<Cat, Double>>, caption: String) {
     val track = MaterialTheme.colorScheme.surfaceVariant
+    val grow = remember { Animatable(0f) }
+    LaunchedEffect(total, parts.size) {
+        grow.snapTo(0f)
+        grow.animateTo(1f, tween(900))
+    }
+    val shown = parts.take(4)
     Surface(
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
+                .padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Canvas(modifier = Modifier.size(190.dp)) {
-                val stroke = 26.dp.toPx()
-                val arcSize = Size(size.width - stroke, size.height - stroke)
-                val topLeft = Offset(stroke / 2, stroke / 2)
-                drawArc(
-                    color = track,
-                    startAngle = 0f,
-                    sweepAngle = 360f,
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
-                    style = Stroke(stroke)
-                )
-                if (total > 0) {
-                    var startAngle = -90f
-                    parts.forEach { part ->
-                        val sweep = (part.second / total * 360.0).toFloat()
-                        drawArc(
-                            color = part.first.color,
-                            startAngle = startAngle,
-                            sweepAngle = (sweep - 2f).coerceAtLeast(0.5f),
-                            useCenter = false,
-                            topLeft = topLeft,
-                            size = arcSize,
-                            style = Stroke(stroke)
-                        )
-                        startAngle += sweep
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
+                if (shown.isEmpty()) {
+                    Text("مفيش مصروفات", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                shown.forEach { p ->
+                    val pc = if (total > 0) (p.second / total * 100).roundToInt() else 0
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(p.first.color))
+                        Text(p.first.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1)
+                        Text("$pc%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "مصروف الشهر",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(money(total), fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    "ج.م",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Spacer(Modifier.width(16.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Canvas(modifier = Modifier.size(150.dp)) {
+                    val stroke = 22.dp.toPx()
+                    val arcSize = Size(size.width - stroke, size.height - stroke)
+                    val topLeft = Offset(stroke / 2, stroke / 2)
+                    drawArc(
+                        color = track,
+                        startAngle = 0f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(stroke)
+                    )
+                    if (total > 0) {
+                        var startAngle = -90f
+                        parts.forEach { part ->
+                            val sweep = (part.second / total * 360.0).toFloat()
+                            drawArc(
+                                color = part.first.color,
+                                startAngle = startAngle,
+                                sweepAngle = ((sweep - 2f).coerceAtLeast(0.5f)) * grow.value,
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = arcSize,
+                                style = Stroke(stroke)
+                            )
+                            startAngle += sweep
+                        }
+                    }
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(money(total * grow.value), fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("ج.م", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(caption, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }
@@ -1757,10 +1855,10 @@ private fun CategoryRow(cat: Cat, value: Double, total: Double, largest: Double,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(cat.color.copy(alpha = 0.15f)),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(cat.icon, contentDescription = null, tint = cat.color)
+                Icon(cat.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(
@@ -1775,9 +1873,11 @@ private fun CategoryRow(cat: Cat, value: Double, total: Double, largest: Double,
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                val pg = remember { Animatable(0f) }
+                LaunchedEffect(value, largest) { pg.animateTo((value / largest).toFloat(), tween(800)) }
                 LinearProgressIndicator(
-                    progress = { (value / largest).toFloat() },
-                    color = if (over) MaterialTheme.colorScheme.error else cat.color,
+                    progress = { pg.value },
+                    color = if (over) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1817,6 +1917,35 @@ fun AddSheet(
     val amount = amountText.westernDigits().replace(',', '.').toDoubleOrNull()
     val canSave = amount != null && amount > 0
 
+    val doSave = {
+        if (amount != null && amount > 0) {
+            val now = System.currentTimeMillis()
+            val finalCat = if (isIncome) Cat.OTHER else cat
+            val finalTitle = title.trim().ifBlank { if (isIncome) "دخل" else finalCat.label }
+            onSave(
+                Tx(
+                    id = initial?.id ?: newId,
+                    title = finalTitle,
+                    amount = amount,
+                    category = finalCat.key,
+                    isIncome = isIncome,
+                    createdAt = initial?.createdAt ?: now,
+                    ref = initial?.ref ?: "",
+                    photo = photo
+                )
+            )
+        }
+    }
+    val press = { k: String ->
+        amountText = when (k) {
+            "⌫" -> amountText.dropLast(1)
+            "." -> if (amountText.contains('.')) amountText
+            else if (amountText.isEmpty()) "0." else "$amountText."
+            else -> if (amountText.length >= 10) amountText
+            else if (amountText == "0") k else amountText + k
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1824,14 +1953,15 @@ fun AddSheet(
             .imePadding()
     ) {
         ScreenBar(
-            if (initial != null) "تعديل العملية" else if (isIncome) "دخل جديد" else "مصروف جديد",
+            if (initial != null) "تعديل العملية" else if (isIncome) "إضافة دخل" else "إضافة مصروف",
             onBack
         )
         Column(
             modifier = Modifier
                 .weight(1f)
+                .appear()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
@@ -1839,20 +1969,29 @@ fun AddSheet(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(50))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(3.dp)
             ) {
                 TypeButton("مصروف", !isIncome, Modifier.weight(1f)) { isIncome = false }
                 TypeButton("دخل", isIncome, Modifier.weight(1f)) { isIncome = true }
             }
 
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Surface(
+                shape = RoundedCornerShape(22.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    Row(verticalAlignment = Alignment.Bottom) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         Text(
                             amountText.ifEmpty { "0" },
-                            fontSize = 54.sp,
+                            fontSize = 52.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = if (amountText.isEmpty()) MaterialTheme.colorScheme.outline
                             else MaterialTheme.colorScheme.onSurface,
@@ -1869,7 +2008,18 @@ fun AddSheet(
                 }
             }
 
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                placeholder = { Text("ملاحظة (اختياري)") },
+                leadingIcon = { Icon(Ic.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
             if (!isIncome) {
+                Text("اختر التصنيف", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Cat.entries.chunked(4).forEach { rowItems ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -1884,40 +2034,57 @@ fun AddSheet(
                 }
             }
 
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    listOf(
-                        listOf("1", "2", "3"),
-                        listOf("4", "5", "6"),
-                        listOf("7", "8", "9"),
-                        listOf(".", "0", "⌫")
-                    ).forEach { r ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            r.forEach { k ->
-                                KeypadKey(k, Modifier.weight(1f)) {
-                                    amountText = when (k) {
-                                        "⌫" -> amountText.dropLast(1)
-                                        "." -> if (amountText.contains('.')) amountText
-                                        else if (amountText.isEmpty()) "0." else "$amountText."
-                                        else -> if (amountText.length >= 10) amountText
-                                        else if (amountText == "0") k else amountText + k
-                                    }
+            Surface(
+                shape = RoundedCornerShape(22.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    val src = remember { MutableInteractionSource() }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(3f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9")).forEach { r ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    r.forEach { k -> KeypadKey(k, Modifier.weight(1f)) { press(k) } }
+                                }
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                KeypadKey("0", Modifier.weight(2f)) { press("0") }
+                                KeypadKey(".", Modifier.weight(1f)) { press(".") }
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            KeypadKey("⌫", Modifier.fillMaxWidth()) { press("⌫") }
+                            Button(
+                                onClick = { doSave() },
+                                enabled = canSave,
+                                interactionSource = src,
+                                shape = RoundedCornerShape(14.dp),
+                                contentPadding = PaddingValues(4.dp),
+                                modifier = Modifier
+                                    .pressScale(src)
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                            ) {
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                                    Text(
+                                        if (initial != null) "حفظ التعديل" else if (isIncome) "تأكيد الدخل" else "تأكيد المصروف",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
                                 }
                             }
                         }
                     }
                 }
             }
-
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("الوصف (اختياري)") },
-                placeholder = { Text("مثلاً: غدا مع الشباب") },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
 
             PhotoSection(
                 photo = photo,
@@ -1927,42 +2094,7 @@ fun AddSheet(
                     photo = name
                 }
             )
-            Spacer(Modifier.height(4.dp))
-        }
-
-        Button(
-            onClick = {
-                if (amount != null && amount > 0) {
-                    val now = System.currentTimeMillis()
-                    val finalCat = if (isIncome) Cat.OTHER else cat
-                    val finalTitle = title.trim().ifBlank { if (isIncome) "دخل" else finalCat.label }
-                    onSave(
-                        Tx(
-                            id = initial?.id ?: newId,
-                            title = finalTitle,
-                            amount = amount,
-                            category = finalCat.key,
-                            isIncome = isIncome,
-                            createdAt = initial?.createdAt ?: now,
-                            ref = initial?.ref ?: "",
-                            photo = photo
-                        )
-                    )
-                }
-            },
-            enabled = canSave,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(54.dp)
-        ) {
-            Text(
-                if (initial != null) "حفظ التعديل" else if (isIncome) "تأكيد الدخل" else "تأكيد المصروف",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp
-            )
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
@@ -1970,12 +2102,23 @@ fun AddSheet(
 @Composable
 private fun CatTile(cat: Cat, selected: Boolean, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    val pop by animateFloatAsState(
+        if (selected) 1.04f else 1f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "pop"
+    )
+    val bg by animateColorAsState(if (selected) scheme.primaryContainer else scheme.surface, label = "catbg")
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = pop
+                scaleY = pop
+            }
             .clip(RoundedCornerShape(18.dp))
-            .background(if (selected) scheme.primary else scheme.primaryContainer)
-            .clickable(onClick = onClick)
+            .background(bg)
+            .border(2.dp, if (selected) scheme.primary else Color.Transparent, RoundedCornerShape(18.dp))
+            .bounceClick(onClick)
             .padding(vertical = 11.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -1983,14 +2126,14 @@ private fun CatTile(cat: Cat, selected: Boolean, onClick: () -> Unit) {
         Icon(
             cat.icon,
             contentDescription = null,
-            tint = if (selected) scheme.onPrimary else scheme.primary,
+            tint = scheme.primary,
             modifier = Modifier.size(26.dp)
         )
         Text(
             cat.label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = if (selected) scheme.onPrimary else scheme.onPrimaryContainer,
+            color = if (selected) scheme.primary else scheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -2001,15 +2144,16 @@ private fun CatTile(cat: Cat, selected: Boolean, onClick: () -> Unit) {
 private fun KeypadKey(label: String, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
-            .height(50.dp)
+            .height(52.dp)
             .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
+            .bounceClick(onClick)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
         contentAlignment = Alignment.Center
     ) {
         if (label == "⌫") {
-            Icon(Ic.Backspace, contentDescription = "مسح", modifier = Modifier.size(26.dp))
+            Icon(Ic.Backspace, contentDescription = "مسح", modifier = Modifier.size(24.dp))
         } else {
-            Text(label, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Text(label, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -2,6 +2,13 @@
 
 package com.masrofy.app
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -210,21 +217,7 @@ fun GoalsScreen(goals: List<Goal>, onBack: () -> Unit, onSave: (List<Goal>) -> U
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = { ScreenBar("أهداف الادخار", onBack) },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    editing = null
-                    showForm = true
-                },
-                icon = { Icon(Ic.Plus, contentDescription = null) },
-                text = { Text("هدف جديد") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(18.dp),
-                modifier = Modifier.navigationBarsPadding()
-            )
-        }
+        topBar = { ScreenBar("أهداف التوفير", onBack) }
     ) { pad ->
         if (goals.isEmpty()) {
             Column(
@@ -236,6 +229,8 @@ fun GoalsScreen(goals: List<Goal>, onBack: () -> Unit, onSave: (List<Goal>) -> U
                 verticalArrangement = Arrangement.Center
             ) {
                 EmptyState("مفيش أهداف لسه", "حدد هدف (موبايل، سفر، طوارئ) وتابع تقدمك لحد ما توصله")
+                Spacer(Modifier.height(16.dp))
+                AddGoalButton { editing = null; showForm = true }
             }
         } else {
             LazyColumn(
@@ -245,35 +240,10 @@ fun GoalsScreen(goals: List<Goal>, onBack: () -> Unit, onSave: (List<Goal>) -> U
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                item {
-                    Surface(
-                        shape = RoundedCornerShape(22.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                "إجمالي المدخر",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                money(totalSaved) + " ج.م",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                "من " + money(totalTarget) + " ج.م (الادخار منفصل عن رصيدك)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
                 items(goals, key = { it.id }) { g ->
                     GoalCard(g) { selected = g }
                 }
+                item { AddGoalButton { editing = null; showForm = true } }
             }
         }
     }
@@ -373,68 +343,74 @@ fun GoalsScreen(goals: List<Goal>, onBack: () -> Unit, onSave: (List<Goal>) -> U
 
 @Composable
 private fun GoalCard(g: Goal, onClick: () -> Unit) {
-    val tint = goalColor(g.icon)
     val done = g.target > 0 && g.saved >= g.target
+    val pg = remember { Animatable(0f) }
+    LaunchedEffect(g.saved, g.target) { pg.animateTo(progress(g), tween(800)) }
     Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth()
+        shadowElevation = 1.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .appear()
+            .clip(RoundedCornerShape(22.dp))
+            .bounceClick(onClick)
     ) {
-        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(15.dp))
-                        .background(tint.copy(alpha = 0.15f)),
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(goalIcon(g.icon), contentDescription = null, tint = tint)
+                    Icon(goalIcon(g.icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(g.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(g.name, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        money(g.saved) + " من " + money(g.target) + " ج.م",
+                        "من " + money(g.saved) + " إلى " + money(g.target) + " ج.م",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+            LinearProgressIndicator(
+                progress = { pg.value },
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(12.dp)
+                    .clip(RoundedCornerShape(6.dp))
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "${(progress(g) * 100).toInt()}%",
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 if (done) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(incomeColor()),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Ic.Check,
-                            contentDescription = "تم",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Ic.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Text("تم تحقيق الهدف", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                     }
                 } else {
                     Text(
-                        "${(progress(g) * 100).toInt()}%",
+                        "متبقي " + money(g.target - g.saved) + " ج.م",
                         fontWeight = FontWeight.Bold,
-                        color = tint
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             }
-            LinearProgressIndicator(
-                progress = { progress(g) },
-                color = tint,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-            )
         }
     }
 }
@@ -512,4 +488,23 @@ private fun GoalDialog(initial: Goal?, onDismiss: () -> Unit, onSave: (Goal) -> 
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
     )
+}
+
+
+@Composable
+private fun AddGoalButton(onClick: () -> Unit) {
+    val src = remember { MutableInteractionSource() }
+    Button(
+        onClick = onClick,
+        interactionSource = src,
+        shape = RoundedCornerShape(50),
+        modifier = Modifier
+            .pressScale(src)
+            .fillMaxWidth()
+            .height(54.dp)
+    ) {
+        Icon(Ic.Plus, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("إضافة هدف", fontWeight = FontWeight.ExtraBold)
+    }
 }

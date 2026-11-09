@@ -1,5 +1,7 @@
 package com.masrofy.app
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -67,72 +69,60 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0FA968), Color(0xFF0B6B4B)))),
+            .background(Brush.verticalGradient(listOf(Color(0xFF12B573), Color(0xFF0B6B4B)))),
         contentAlignment = Alignment.Center
     ) {
+        Skyline(modifier = Modifier.align(Alignment.BottomCenter))
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(bottom = 60.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(168.dp)
+                    .size(150.dp)
                     .graphicsLayer {
                         scaleX = scale.value
                         scaleY = scale.value
                     },
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.size(168.dp)) {
-                    val stroke = 6.dp.toPx()
-                    val arcSize = Size(size.width - stroke, size.height - stroke)
-                    val topLeft = Offset(stroke / 2, stroke / 2)
-                    drawArc(
-                        color = Color.White.copy(alpha = 0.15f),
-                        startAngle = 0f,
-                        sweepAngle = 360f,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
-                        style = Stroke(stroke)
-                    )
-                    drawArc(
-                        color = Color.White,
-                        startAngle = -90f,
-                        sweepAngle = 360f * ring.value,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
-                        style = Stroke(stroke, cap = StrokeCap.Round)
-                    )
-                }
-                Box(
+                Icon(
+                    Ic.Wallet,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(118.dp)
+                )
+                Icon(
+                    Ic.Sparkle,
+                    contentDescription = null,
+                    tint = Color(0xFFB6F23A),
                     modifier = Modifier
-                        .size(118.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Ic.Wallet,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(58.dp)
-                    )
-                }
+                        .size(60.dp)
+                        .align(Alignment.TopEnd)
+                        .alpha(ring.value)
+                )
             }
             Text(
                 "مصروفي",
                 color = Color.White,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 46.sp,
+                fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.alpha(textAlpha.value)
             )
             Text(
                 "تابع فلوسك بسهولة",
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.92f),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.alpha(textAlpha.value)
+            )
+            Box(
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(3.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFB6F23A).copy(alpha = 0.9f * textAlpha.value))
             )
         }
         LinearProgressIndicator(
@@ -142,8 +132,55 @@ fun SplashScreen(onFinished: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(bottom = 48.dp)
+                .padding(bottom = 24.dp)
                 .width(140.dp)
         )
+    }
+}
+
+/** خط أفق مصري: أهرامات ومئذنة ونخيل. */
+@Composable
+private fun Skyline(modifier: Modifier = Modifier) {
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(170.dp)
+    ) {
+        val w = size.width
+        val h = size.height
+        val back = Color(0xFF0B6B4B).copy(alpha = 0.55f)
+        val front = Color(0xFF0A5A3C).copy(alpha = 0.8f)
+        // أهرامات
+        val p1 = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.52f, h); lineTo(w * 0.70f, h * 0.38f); lineTo(w * 0.88f, h); close()
+        }
+        val p2 = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.72f, h); lineTo(w * 0.86f, h * 0.55f); lineTo(w * 1.0f, h); close()
+        }
+        drawPath(p1, back)
+        drawPath(p2, back)
+        // مئذنة وقبة
+        drawRect(front, Offset(w * 0.34f, h * 0.30f), Size(w * 0.025f, h * 0.70f))
+        drawCircle(front, w * 0.03f, Offset(w * 0.3425f, h * 0.28f))
+        drawRect(front, Offset(w * 0.20f, h * 0.62f), Size(w * 0.16f, h * 0.38f))
+        drawArc(front, 180f, 180f, true, Offset(w * 0.22f, h * 0.42f), Size(w * 0.12f, h * 0.40f))
+        // مباني
+        drawRect(front, Offset(0f, h * 0.78f), Size(w * 0.20f, h * 0.22f))
+        drawRect(front, Offset(w * 0.40f, h * 0.74f), Size(w * 0.10f, h * 0.26f))
+        // نخيل
+        listOf(w * 0.08f to 0.55f, w * 0.14f to 0.66f, w * 0.60f to 0.62f, w * 0.94f to 0.6f).forEach { (x, top) ->
+            drawLine(front, Offset(x, h), Offset(x, h * top), strokeWidth = w * 0.008f)
+            for (a in listOf(-50f, -20f, 20f, 50f)) {
+                val rad = Math.toRadians((a - 90).toDouble())
+                val len = w * 0.045f
+                drawLine(
+                    front,
+                    Offset(x, h * top),
+                    Offset(x + (len * Math.cos(rad)).toFloat(), h * top + (len * Math.sin(rad)).toFloat() + len * 0.5f),
+                    strokeWidth = w * 0.006f
+                )
+            }
+        }
+        drawRect(front, Offset(0f, h * 0.94f), Size(w, h * 0.06f))
     }
 }

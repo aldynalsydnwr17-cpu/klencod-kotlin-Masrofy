@@ -285,13 +285,6 @@ fun MoreScreen(onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
-            Text(
-                "المزيد",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-        item {
             MoreItem(
                 Ic.Receipt, Color(0xFF0FA968), "الفواتير",
                 "أنشئ فواتير وابعتها PDF وتابع المدفوع والمستحق"

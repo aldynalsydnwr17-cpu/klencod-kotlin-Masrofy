@@ -5,15 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "com.masrofy.app"
+    namespace = "com.khatti.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.masrofy.app"
+        applicationId = "com.khatti.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "3.0"
+        versionCode = 1
+        versionName = "1.0"
     }
 
     signingConfigs {

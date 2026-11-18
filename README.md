@@ -1,2 +1,4 @@
-# klencod-kotlin-Masrofy
-Project created by KLENCOD IDE
+# خطّي (Khatti)
+تطبيق أندرويد (Kotlin وCompose) لتحسين الخط العربي للكبار: تدريب على الورق، تصوير الصفحة، تقييم ذاتي، وتتبع التقدم.
+
+الـ APK بيتبني تلقائيًا بـ GitHub Actions وبيظهر في Releases.

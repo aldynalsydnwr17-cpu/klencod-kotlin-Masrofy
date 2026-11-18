@@ -35,6 +35,13 @@ class Store(private val ctx: Context) {
 
     fun bestStreak() = sp.getInt("best", 0)
 
+    fun dayCount(d: LocalDate) = sp.getInt("d_$d", 0)
+
+    fun reset() {
+        sp.edit().clear().apply()
+        photosDir().listFiles()?.forEach { it.delete() }
+    }
+
     /** عدد التدريبات لكل يوم من السبت للجمعة في الأسبوع الحالي */
     fun weekCounts(): List<Int> {
         val today = LocalDate.now()

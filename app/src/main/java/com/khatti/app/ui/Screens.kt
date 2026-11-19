@@ -12,8 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +28,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -36,16 +36,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
+import com.khatti.app.R
 import com.khatti.app.data.*
 import kotlinx.coroutines.delay
 import java.io.File
 import java.time.LocalDate
 
-private enum class Tab(val label: String, val icon: ImageVector) {
-    Home("الرئيسية", Icons.Filled.Home),
-    Progress("تقدمي", Icons.Filled.BarChart),
-    Library("المكتبة", Icons.Filled.MenuBook),
-    Settings("الإعدادات", Icons.Filled.Settings),
+private enum class Tab(val label: String, val icon: Int) {
+    Home("الرئيسية", R.drawable.ic_home),
+    Progress("تقدمي", R.drawable.ic_bars),
+    Library("المكتبة", R.drawable.ic_book),
+    Settings("الإعدادات", R.drawable.ic_gear),
 }
 
 private enum class Flow { Drill, Capture, Result }
@@ -72,7 +73,7 @@ fun KhattiApp() {
                 Tab.values().forEach {
                     NavigationBarItem(
                         selected = tab == it, onClick = { tab = it },
-                        icon = { Icon(it.icon, null) },
+                        icon = { Ico(it.icon, size = 26.dp) },
                         label = { Text(it.label, fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Amber, selectedTextColor = Amber,
@@ -109,6 +110,11 @@ fun KhattiApp() {
 
 // ───────────────────────── مكونات مشتركة ─────────────────────────
 
+/** أيقونة PNG شفافة من التصميم، تتلوّن مثل أي أيقونة عادية */
+@Composable
+private fun Ico(res: Int, tint: Color = LocalContentColor.current, size: Dp = 24.dp, modifier: Modifier = Modifier) =
+    Icon(painterResource(res), null, modifier.size(size), tint = tint)
+
 @Composable
 private fun PrimaryButton(
     text: String, color: Color = Amber, trailing: ImageVector? = null, modifier: Modifier = Modifier, onClick: () -> Unit,
@@ -126,12 +132,12 @@ private fun TopBar(
     tint: Color = MaterialTheme.colorScheme.onBackground,
 ) = Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.size(48.dp)) {
-        if (onBack != null) IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "رجوع", tint = tint) }
+        if (endIcon != null) IconButton(onEnd) { Icon(endIcon, null, tint = tint) }
     }
     Text(title, Modifier.weight(1f), textAlign = TextAlign.Center, color = tint,
         style = MaterialTheme.typography.titleMedium)
     Box(Modifier.size(48.dp)) {
-        if (endIcon != null) IconButton(onEnd) { Icon(endIcon, null, tint = tint) }
+        if (onBack != null) IconButton(onBack) { Icon(Icons.Outlined.ChevronLeft, "رجوع", tint = tint) }
     }
 }
 
@@ -224,8 +230,8 @@ private fun HomeScreen(store: Store, onStart: () -> Unit) {
     val streak = store.streak()
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            Icon(Icons.Filled.Menu, null, tint = Ink)
-            Icon(Icons.Filled.Notifications, null, tint = Ink)
+            Icon(Icons.Outlined.Notifications, null, tint = Ink)
+            Icon(Icons.Outlined.Menu, null, tint = Ink)
         }
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("خطّي", fontSize = 56.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
@@ -234,30 +240,28 @@ private fun HomeScreen(store: Store, onStart: () -> Unit) {
         Spacer(Modifier.height(4.dp))
         SurfaceCard {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(56.dp).clip(CircleShape).background(Amber.copy(alpha = .15f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.LocalFireDepartment, null, tint = Amber, modifier = Modifier.size(34.dp))
-                }
-                Spacer(Modifier.width(14.dp))
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text("سلسلة اليوم", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(if (streak == 0) "ابدأ سلسلتك" else "$streak يومًا", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
                     if (streak > 0) Text("مستمرة", fontSize = 12.sp, color = Amber, fontWeight = FontWeight.SemiBold)
+                }
+                Box(Modifier.size(56.dp).clip(CircleShape).background(Amber.copy(alpha = .15f)), contentAlignment = Alignment.Center) {
+                    Ico(R.drawable.ic_flame, Amber, 34.dp)
                 }
             }
         }
         Card(Modifier.fillMaxWidth(), shape = CardShape, colors = CardDefaults.cardColors(Ink)) {
             Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(28.dp))
-                Spacer(Modifier.width(14.dp))
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text("خط اليوم", color = Color.White.copy(alpha = .7f), fontSize = 12.sp)
                     Text("تدريب على ${drill.title}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Text("مع كلمات: " + drill.words.joinToString("، "), color = Color.White.copy(alpha = .8f), fontSize = 13.sp)
                 }
+                Ico(R.drawable.ic_calendar, Color.White, 30.dp)
             }
         }
         Spacer(Modifier.weight(1f))
-        PrimaryButton("بدء التدريب", trailing = Icons.Filled.ChevronLeft, onClick = onStart)
+        PrimaryButton("بدء التدريب", trailing = Icons.Outlined.ChevronLeft, onClick = onStart)
         Spacer(Modifier.height(10.dp))
     }
 }
@@ -289,20 +293,20 @@ private fun DrillScreen(index: Int, onExit: () -> Unit, onFinish: () -> Unit) {
         text = { Text("انسخ الحرف أو الكلمة في دفترك على سطر كامل، وخلّي قاعدة الحروف على الخط الأحمر. بعد ما تخلّص كل الخطوات هتصوّر صفحتك.") },
     )
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        TopBar("تدريب اليوم", onBack = onExit, endIcon = Icons.Filled.Info, onEnd = { info = true })
+        TopBar("تدريب اليوم", onBack = onExit, endIcon = Icons.Outlined.Info, onEnd = { info = true })
         Box(Modifier.fillMaxWidth().weight(1f).clip(CardShape).background(MaterialTheme.colorScheme.surface)) {
             RuledPaper(Modifier.fillMaxSize())
             Text(
                 steps[step], fontSize = if (step == 0) 150.sp else 76.sp, fontWeight = FontWeight.ExtraBold, color = Ink,
                 modifier = Modifier.align(Alignment.Center).padding(bottom = 30.dp),
             )
-            Text("${step + 1} / ${steps.size}", Modifier.align(Alignment.TopStart).padding(12.dp), fontSize = 12.sp,
+            Text("${step + 1} من ${steps.size}", Modifier.align(Alignment.TopStart).padding(12.dp), fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(12.dp))
         Card(Modifier.fillMaxWidth(), shape = CardShape, colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
             Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
-                Icon(Icons.Filled.Lightbulb, null, tint = Amber)
+                Ico(R.drawable.ic_bulb, Amber, 28.dp)
                 Spacer(Modifier.width(10.dp))
                 Column {
                     Text("نصيحة:", fontWeight = FontWeight.Bold)
@@ -322,7 +326,7 @@ private fun DrillScreen(index: Int, onExit: () -> Unit, onFinish: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Color.White),
             ) {
                 Text(if (step < steps.lastIndex) "التالي" else "صوّر صفحتك", fontWeight = FontWeight.Bold)
-                Spacer(Modifier.width(6.dp)); Icon(Icons.Filled.ChevronLeft, null)
+                Spacer(Modifier.width(6.dp)); Icon(Icons.Outlined.ChevronLeft, null)
             }
         }
     }
@@ -349,9 +353,9 @@ private fun CaptureScreen(store: Store, onClose: () -> Unit, onCaptured: (File) 
         }
     }
     Column(Modifier.fillMaxSize().background(Color(0xFF14171C))) {
-        TopBar("صوّر صفحتك", onBack = null, endIcon = Icons.Filled.FlashOn, tint = Color.White)
+        TopBar("صوّر صفحتك", onBack = null, endIcon = Icons.Outlined.FlashOn, tint = Color.White)
         Box(Modifier.fillMaxWidth().padding(start = 8.dp)) {
-            IconButton(onClose) { Icon(Icons.Filled.Close, "إغلاق", tint = Color.White) }
+            IconButton(onClose) { Icon(Icons.Outlined.Close, "إغلاق", tint = Color.White) }
         }
         Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)).background(Color(0xFF2A2F38)))
@@ -373,7 +377,7 @@ private fun CaptureScreen(store: Store, onClose: () -> Unit, onCaptured: (File) 
             Modifier.fillMaxWidth().padding(bottom = 32.dp, start = 32.dp, end = 32.dp),
             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically,
         ) {
-            RoundIcon(Icons.Filled.PhotoLibrary, false) { gallery.launch("image/*") }
+            RoundIcon(Icons.Outlined.PhotoLibrary, false) { gallery.launch("image/*") }
             Box(
                 Modifier.size(78.dp).clip(CircleShape).border(4.dp, Amber, CircleShape).padding(7.dp).clip(CircleShape).background(Amber)
                     .clickable {
@@ -381,7 +385,7 @@ private fun CaptureScreen(store: Store, onClose: () -> Unit, onCaptured: (File) 
                         camera.launch(FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", f))
                     },
             )
-            RoundIcon(Icons.Filled.FlashlightOn, torch) { torch = !torch }
+            RoundIcon(Icons.Outlined.FlashlightOn, torch) { torch = !torch }
         }
     }
 }
@@ -411,7 +415,7 @@ private fun ResultScreen(store: Store, current: File?, onBack: () -> Unit, onDon
         TopBar("نتيجة التدريب", onBack = onBack)
         Column(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(84.dp).clip(CircleShape).background(accent), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(52.dp))
+                Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(52.dp))
             }
             Text(headline, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = accent, modifier = Modifier.padding(top = 8.dp))
             Text(sub, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -423,8 +427,6 @@ private fun ResultScreen(store: Store, current: File?, onBack: () -> Unit, onDon
             criteria.forEachIndexed { i, c ->
                 if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Gray.copy(alpha = .25f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.CheckCircle, null, tint = if (rating[i] >= 1) Good else Gray, modifier = Modifier.size(26.dp))
-                    Spacer(Modifier.width(10.dp))
                     Text(c, Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
                     RATING_LABELS.forEachIndexed { r, label ->
                         val on = rating[i] == r
@@ -434,13 +436,15 @@ private fun ResultScreen(store: Store, current: File?, onBack: () -> Unit, onDon
                                 .clickable { rating[i] = r }.padding(horizontal = 10.dp, vertical = 6.dp),
                         ) { Text(label, fontSize = 12.sp, color = if (on) Color.White else MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
+                    Spacer(Modifier.width(10.dp))
+                    Ico(R.drawable.ic_check, if (rating[i] >= 1) Good else Gray, 28.dp)
                 }
             }
         }
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             PhotoThumb(before, "قبل", Modifier.weight(1f))
-            Icon(Icons.Filled.ArrowBack, null, tint = Good, modifier = Modifier.padding(horizontal = 8.dp))
+            Icon(Icons.Outlined.ArrowBack, null, tint = Good, modifier = Modifier.padding(horizontal = 8.dp))
             PhotoThumb(current, "بعد", Modifier.weight(1f))
         }
         Spacer(Modifier.height(16.dp))
@@ -486,7 +490,7 @@ private fun ProgressScreen(store: Store) {
         }
         Card(Modifier.fillMaxWidth(), shape = CardShape, colors = CardDefaults.cardColors(Amber.copy(alpha = .15f))) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.EmojiEvents, null, tint = Amber, modifier = Modifier.size(32.dp))
+                Icon(Icons.Outlined.EmojiEvents, null, tint = Amber, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("أعلى سلسلة", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -509,13 +513,13 @@ private fun ProgressScreen(store: Store) {
 
 // ───────────────────────── 6. المكتبة ─────────────────────────
 
-private val TOPIC_ICONS = listOf(Icons.Filled.Science, Icons.Filled.Work, Icons.Filled.Home)
+private val TOPIC_ICONS = listOf(Icons.Outlined.Science, Icons.Outlined.Work, Icons.Outlined.Home)
 
 @Composable
 private fun LibraryScreen() {
     var mode by remember { mutableIntStateOf(0) }
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { TopBar("المكتبة", endIcon = Icons.Filled.MenuBook) }
+        item { TopBar("المكتبة", endIcon = Icons.Outlined.MenuBook) }
         item { Segments(listOf("حسب الموضوع", "حسب الحرف"), mode) { mode = it } }
         if (mode == 0) {
             items(LIBRARY.size) { i ->
@@ -531,7 +535,7 @@ private fun LibraryScreen() {
                             Text(topic, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             Text("${words.size} كلمة", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Icon(if (open) Icons.Filled.KeyboardArrowDown else Icons.Filled.ChevronLeft, null, tint = Gray)
+                        Icon(if (open) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.ChevronLeft, null, tint = Gray)
                     }
                     if (open) words.forEach { WordLine(it) }
                 }
@@ -550,7 +554,7 @@ private fun LibraryScreen() {
                             Text(d.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             Text(d.words.joinToString("، "), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Icon(if (open) Icons.Filled.KeyboardArrowDown else Icons.Filled.ChevronLeft, null, tint = Gray)
+                        Icon(if (open) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.ChevronLeft, null, tint = Gray)
                     }
                     if (open) d.words.forEach { WordLine(it) }
                 }
@@ -584,7 +588,7 @@ private fun SettingsScreen(store: Store, onReset: () -> Unit) {
             Text("عن التطبيق", fontWeight = FontWeight.Bold)
             Text("خطّي: تطبيق لتحسين الخط العربي للكبار. اكتب في دفترك، صوّر صفحتك، وقيّم نفسك وتابع تقدمك.",
                 fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
-            Text("الإصدار 1.1", fontSize = 12.sp, color = Gray, modifier = Modifier.padding(top = 8.dp))
+            Text("الإصدار 1.2", fontSize = 12.sp, color = Gray, modifier = Modifier.padding(top = 8.dp))
         }
         OutlinedButton(
             onClick = { confirm = true }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(26.dp),

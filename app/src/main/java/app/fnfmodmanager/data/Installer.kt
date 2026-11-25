@@ -104,7 +104,7 @@ class Installer(private val context: Context) {
             if (!fs.delete(old.uri)) throw IOException("تعذّر حذف المود القديم بعد أخذ النسخة الاحتياطية.")
         }
         val modDir = fs.mkdir(modsRoot, folder) ?: throw IOException("تعذّر إنشاء مجلد المود.")
-        val written = ArrayList<ManifestStore.Entry>()
+        val entries = ArrayList<ManifestStore.Entry>()
         var finished = false
         try {
             val warnings = ArrayList<String>()
@@ -155,7 +155,7 @@ class Installer(private val context: Context) {
                     val expected = if (f.size >= 0) f.size else written
                     if (st != null && st.name == name && st.size == expected) {
                         ok = true
-                        written += ManifestStore.Entry(f.path, expected)
+                        entries += ManifestStore.Entry(f.path, expected)
                         break
                     }
                     fs.delete(uri)
@@ -177,7 +177,7 @@ class Installer(private val context: Context) {
             if (newApi != oldApi) obj.put("api_version", newApi)
             val bytes = obj.toString(2).replace("\\/", "/").toByteArray(Charsets.UTF_8)
             writeVerified(fs, modDir, META_NAME, bytes)
-            written += ManifestStore.Entry(META_NAME, bytes.size.toLong())
+            entries += ManifestStore.Entry(META_NAME, bytes.size.toLong())
 
             // --- final check
             onProgress(InstallPhase.VERIFY, files.size, totalBytes, "")
@@ -189,7 +189,7 @@ class Installer(private val context: Context) {
                 val dir = File(context.filesDir, "covers").apply { mkdirs() }
                 File(dir, "$folder.png").writeBytes(b)
             }
-            manifests.save(ManifestStore.Manifest(folder, p.title, System.currentTimeMillis(), written))
+            manifests.save(ManifestStore.Manifest(folder, p.title, System.currentTimeMillis(), entries))
             finished = true
             InstallResult(folder, p.title, files.size - warnings.size, totalBytes, oldApi, newApi, warnings)
         } finally {

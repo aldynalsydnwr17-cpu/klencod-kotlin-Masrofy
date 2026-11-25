@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The star outline from fnf-logo-transparent.svg, scaled into the adaptive-icon safe zone -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- pen nib -->
-    <path
-        android:fillColor="#F8F4E9"
-        android:pathData="M54,26 L68,52 L61,72 L54,78 L47,72 L40,52 Z" />
-    <!-- nib slit -->
-    <path
-        android:strokeColor="#0B2D5B"
-        android:strokeWidth="2"
-        android:pathData="M54,46 L54,70" />
-    <!-- nib hole -->
-    <path
-        android:fillColor="#0B2D5B"
-        android:pathData="M54,42 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
-    <!-- amber swoosh -->
-    <path
-        android:fillColor="#D47A2C"
-        android:pathData="M30,84 Q54,92 78,80 Q56,98 30,84 Z" />
+    <group
+        android:scaleX="0.34"
+        android:scaleY="0.34"
+        android:translateX="-68.4"
+        android:translateY="23.4">
+        <path
+            android:pathData="M360 24 380 68 428 75 393 108 402 156 360 133 318 156 327 108 292 75 340 68Z"
+            android:strokeColor="#F21D3D"
+            android:strokeWidth="12"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>

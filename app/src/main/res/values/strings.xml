@@ -1,4 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">خطّي</string>
+    <string name="app_name">FNF Mod Manager</string>
+
+    <!-- تبويبات -->
+    <string name="tab_home">الرئيسية</string>
+    <string name="tab_discover">اكتشف المودات</string>
+    <string name="tab_library">مكتبتي</string>
+    <string name="tab_settings">الإعدادات</string>
+
+    <!-- حالات -->
+    <string name="status_installed">مثبت</string>
+    <string name="status_compatible">متوافق</string>
+    <string name="status_incompatible">غير متوافق</string>
+    <string name="status_error">خطأ</string>
+
+    <!-- عام -->
+    <string name="cancel">إلغاء</string>
+    <string name="close">إغلاق</string>
+    <string name="done">تم</string>
+    <string name="retry">رجوع وإعادة المحاولة</string>
+    <string name="save">حفظ</string>
+    <string name="cd_activity">النشاطات</string>
+    <string name="cd_refresh">تحديث</string>
+
+    <!-- الرئيسية -->
+    <string name="home_game_title">Friday Night Funkin’</string>
+    <string name="home_game_version_fmt">إصدار اللعبة: %1$s (اضغط للتعديل)</string>
+    <string name="home_launch">تشغيل اللعبة</string>
+    <string name="stat_total">كل المودات</string>
+    <string name="home_no_folder_title">اختر مجلد بيانات اللعبة</string>
+    <string name="home_no_folder_body">اضغط الزر واختر مجلد «FNF / data folder» من تطبيق الملفات. سيجد التطبيق مجلد mods أو ينشئه تلقائياً.</string>
+    <string name="home_choose_folder">اختيار المجلد</string>
+    <string name="home_add_mod">إضافة مود جديد</string>
+    <string name="home_pick_zip">اختر ملف مود</string>
+    <string name="home_recent">آخر المودات</string>
+    <string name="home_see_all">عرض الكل</string>
+
+    <!-- المكتبة -->
+    <string name="library_search">ابحث عن مود…</string>
+    <string name="library_empty_title">لا توجد مودات</string>
+    <string name="library_empty_body">أضف مود بصيغة V-Slice من زر «إضافة مود جديد» وسيظهر هنا.</string>
+    <string name="filter_all">الكل</string>
+    <string name="filter_favorites">المفضلة</string>
+    <string name="sort_name">الاسم</string>
+    <string name="sort_recent">الأحدث</string>
+    <string name="sort_favorites">المفضلة أولاً</string>
+
+    <!-- اكتشف -->
+    <string name="discover_intro">المودات تتحمّل من مواقعها الأصلية، ثم تختارها من التطبيق وتُثبَّت في اللعبة.</string>
+    <string name="discover_gb_title">GameBanana</string>
+    <string name="discover_gb_body">مودات Friday Night Funkin’ — اختر مودات بصيغة V-Slice فقط.</string>
+    <string name="discover_vslice_title">موقع اللعبة الرسمي</string>
+    <string name="discover_vslice_body">معلومات اللعبة وتحديثاتها.</string>
+    <string name="discover_tip">نصيحة: المود المتوافق فيه ملف _polymod_meta.json. مودات Psych Engine (فيها pack.json) لا تعمل في النسخة الرسمية.</string>
+
+    <!-- الإعدادات -->
+    <string name="settings_folder_title">مجلد بيانات اللعبة</string>
+    <string name="settings_folder_none">لم يتم الاختيار بعد</string>
+    <string name="settings_folder_set">تم الاختيار</string>
+    <string name="settings_version_title">إصدار اللعبة</string>
+    <string name="settings_help_title">كيف يعمل التطبيق؟</string>
+    <string name="settings_help_body">ينسخ المود إلى مجلد mods، يضبط api_version حسب إصدارك، ثم يتأكد أن كل ملف نُسخ كاملاً.</string>
+    <string name="settings_about">FNF Mod Manager — تطبيق غير رسمي، غير تابع للعبة.</string>
+    <string name="version_body">اكتب إصدار اللعبة كما يظهر عندك، مثل 0.8.8. يُكتب في api_version داخل المود.</string>
+
+    <!-- التثبيت -->
+    <string name="chooser_body">اختر ملف ZIP للمود، أو مجلد المود إذا كان مفكوكاً.</string>
+    <string name="chooser_zip">ملف ZIP</string>
+    <string name="chooser_folder">مجلد مفكوك</string>
+    <string name="install_preparing">جارٍ قراءة المود…</string>
+    <string name="install_summary_fmt">%1$d ملف · %2$s</string>
+    <string name="install_exists_warning">المود موجود بالفعل وسيتم استبداله.</string>
+    <string name="install_version_label">إصدار اللعبة</string>
+    <string name="install_confirm">تثبيت</string>
+    <string name="install_keep_open">لا تغلق التطبيق ولا تطفئ الشاشة أثناء النسخ.</string>
+    <string name="install_files_fmt">%1$d من %2$d ملف</string>
+    <string name="phase_prepare">تجهيز مجلد mods…</string>
+    <string name="phase_copy">نسخ الملفات…</string>
+    <string name="phase_patch">ضبط إصدار المود…</string>
+    <string name="phase_verify">فحص الملفات…</string>
+    <string name="install_done_title">تم بنجاح!</string>
+    <string name="install_done_body_fmt">تم نسخ %1$d ملف (%2$s) وتأكدنا أن لا ملف فارغ.\nإصدار المود: %3$s ← %4$s</string>
+    <string name="install_failed_title">فشل التثبيت</string>
+    <string name="install_failed_body">تعذّر إكمال النسخ، وتم حذف المجلد غير المكتمل حتى لا تتعطل اللعبة.</string>
+    <string name="install_read_failed">تعذّرت قراءة هذا الملف. تأكد أنه مود V-Slice سليم.</string>
+    <string name="install_meta_unreadable">ملف _polymod_meta.json غير قابل للقراءة، لا يمكن تثبيت هذا المود.</string>
+
+    <!-- تفاصيل المود -->
+    <string name="detail_versions_fmt">إصدار المود: %1$s · api_version: %2$s · إصدار اللعبة: %3$s</string>
+    <string name="detail_preview">استماع</string>
+    <string name="detail_favorite">أضف للمفضلة</string>
+    <string name="detail_unfavorite">إزالة من المفضلة</string>
+    <string name="detail_repatch_fmt">اضبط الإصدار على %1$s</string>
+    <string name="detail_delete">حذف</string>
+    <string name="delete_title">حذف المود؟</string>
+    <string name="delete_body_fmt">سيتم حذف «%1$s» من مجلد mods نهائياً.</string>
+
+    <!-- النشاطات -->
+    <string name="activity_title">النشاطات</string>
+    <string name="activity_empty">لا توجد نشاطات</string>
+    <string name="activity_empty_body">ستظهر هنا عمليات التثبيت والحذف.</string>
+
+    <!-- رسائل -->
+    <string name="toast_folder_saved">تم حفظ المجلد</string>
+    <string name="toast_version_saved">تم حفظ الإصدار</string>
+    <string name="toast_deleted">تم حذف المود</string>
+    <string name="toast_repatched">تم ضبط الإصدار</string>
+    <string name="toast_error_generic">حدث خطأ غير متوقع</string>
+    <string name="toast_game_missing">لعبة FNF غير مثبتة على هذا الهاتف</string>
+    <string name="toast_preview_none">لا يوجد ملف صوت في هذا المود</string>
+    <string name="toast_preview_fail">تعذّر تشغيل الصوت</string>
+    <string name="toast_choose_folder">اختر مجلد بيانات اللعبة أولاً</string>
+
+    <!-- سجل النشاط -->
+    <string name="log_folder_saved">تم اختيار مجلد اللعبة</string>
+    <string name="log_installed_fmt">تم تثبيت %1$s</string>
+    <string name="log_install_failed_fmt">فشل تثبيت %1$s</string>
+    <string name="log_deleted_fmt">تم حذف %1$s</string>
+    <string name="log_repatched_fmt">تم ضبط %1$s على الإصدار %2$s</string>
 </resources>

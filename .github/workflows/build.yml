@@ -23,6 +23,9 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      - name: Fetch IBM Plex Sans Arabic
+        run: bash scripts/fetch_fonts.sh
+
       - name: Decode signing key
         run: base64 -d signing/masrofy.keystore.b64 > signing/masrofy.keystore
 
@@ -31,17 +34,20 @@ jobs:
           set -o pipefail
           gradle assembleDebug --no-daemon 2>&1 | tee build.log
 
+      - name: Name the APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk FNF-Mod-Manager.apk
+
       - uses: actions/upload-artifact@v4
         with:
-          name: khatti-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: fnf-mod-manager-apk
+          path: FNF-Mod-Manager.apk
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Khatti build ${{ github.run_number }}
-          files: app/build/outputs/apk/debug/app-debug.apk
+          name: FNF Mod Manager build ${{ github.run_number }}
+          files: FNF-Mod-Manager.apk
 
       - name: Publish build log on failure
         if: failure()

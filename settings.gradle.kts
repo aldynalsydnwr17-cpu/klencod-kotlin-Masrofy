@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Khatti"
+rootProject.name = "FnfModManager"
 include(":app")

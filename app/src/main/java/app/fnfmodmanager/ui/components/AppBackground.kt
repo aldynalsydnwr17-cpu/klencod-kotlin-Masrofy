@@ -1,6 +1,10 @@
 package app.fnfmodmanager.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import app.fnfmodmanager.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +39,10 @@ fun AppBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.(
                     ),
                 )
             },
-        content = content,
+        content = {
+            // red smoke / graffiti overlay (transparent PNG), cropped not stretched, behind everything
+            Image(painterResource(R.drawable.red_smoke_graffiti_overlay), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            content()
+        },
     )
 }

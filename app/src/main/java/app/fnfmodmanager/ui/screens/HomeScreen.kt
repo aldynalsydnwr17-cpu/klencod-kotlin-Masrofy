@@ -21,6 +21,7 @@ import app.fnfmodmanager.data.PreviewPlayer
 import app.fnfmodmanager.data.UiState
 import app.fnfmodmanager.ui.components.EmptyState
 import app.fnfmodmanager.ui.components.FnfLogo
+import app.fnfmodmanager.ui.components.FnfMascot
 import app.fnfmodmanager.ui.components.GameCard
 import app.fnfmodmanager.ui.components.Ic
 import app.fnfmodmanager.ui.components.IconTile
@@ -52,6 +53,7 @@ fun HomeScreen(state: UiState, player: PreviewPlayer.State, actions: HomeActions
     ) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                FnfMascot(Modifier.height(92.dp))
                 FnfLogo(Modifier.weight(1f).height(56.dp))
                 IconTile(Ic.Bell, actions.onBell, stringResource(R.string.cd_activity), badge = state.unread)
                 Spacer(Modifier.width(10.dp))

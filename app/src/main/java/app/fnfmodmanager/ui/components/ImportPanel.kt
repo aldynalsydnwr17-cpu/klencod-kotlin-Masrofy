@@ -44,7 +44,12 @@ fun ImportPanel(onPick: () -> Unit, modifier: Modifier = Modifier) {
             }
             .padding(18.dp),
     ) {
-        FnfIcon(Ic.FileZip, Modifier.align(Alignment.CenterStart).alpha(0.12f), size = 84.dp, tint = Color.White)
+        // faded_zip_mark.png from the replacement pack, already faded in the file itself
+        androidx.compose.foundation.Image(
+            androidx.compose.ui.res.painterResource(R.drawable.faded_zip_mark), null,
+            Modifier.align(Alignment.CenterStart).height(92.dp),
+            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+        )
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 FnfIcon(Ic.ImportFolder, size = 48.dp, red = true)

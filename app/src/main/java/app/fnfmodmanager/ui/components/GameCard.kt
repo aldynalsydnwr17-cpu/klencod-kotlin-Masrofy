@@ -69,6 +69,7 @@ fun GameCard(
                     Text(msg, style = MaterialTheme.typography.labelMedium, color = if (ok) FnfColors.Success else FnfColors.Warning)
                 }
             }
+            GameTitleLogo(Modifier.padding(start = 8.dp).width(84.dp))
         }
     }
 }

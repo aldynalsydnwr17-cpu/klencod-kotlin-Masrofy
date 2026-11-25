@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,11 +46,9 @@ fun BottomNavBar(current: Tab, onSelect: (Tab) -> Unit, modifier: Modifier = Mod
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                Box(
-                    Modifier.clip(RoundedCornerShape(14.dp)).background(if (on) FnfColors.Accent.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent)
-                        .padding(horizontal = 18.dp, vertical = 5.dp),
-                ) { FnfIcon(tab.icon, size = 24.dp, red = on, tint = if (on) androidx.compose.ui.graphics.Color.Unspecified else FnfColors.Muted) }
-                Text(stringResource(tab.label), style = MaterialTheme.typography.labelSmall, color = if (on) FnfColors.Accent else FnfColors.Muted, maxLines = 1)
+                FnfIcon(tab.icon, size = 26.dp, red = on)
+                Text(stringResource(tab.label), style = MaterialTheme.typography.labelMedium, color = if (on) FnfColors.Accent else FnfColors.Text, maxLines = 1)
+                Box(Modifier.fillMaxWidth(0.8f).height(3.dp).clip(RoundedCornerShape(50)).background(if (on) FnfColors.Accent else androidx.compose.ui.graphics.Color.Transparent))
             }
         }
     }

@@ -51,8 +51,6 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
 
     val modActions = ModActions(
         onOpen = vm::openDetail,
-        onFavorite = vm::toggleFavorite,
-        onPreview = vm::preview,
         onLaunch = vm::launchGame,
         onChangeCover = { vm.startCoverPick(it); pickers.cover() },
         onResetCover = vm::resetCover,
@@ -108,8 +106,6 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
             ModDetailSheet(
                 m, state.gameVersion,
                 onClose = vm::closeDetail,
-                onFavorite = { vm.toggleFavorite(m) },
-                onPreview = { vm.preview(m) },
                 onRepatch = { vm.repatch(m) },
                 onDelete = { vm.askDelete(m) },
                 onChangeCover = { vm.startCoverPick(m); pickers.cover() },

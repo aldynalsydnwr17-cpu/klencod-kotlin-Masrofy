@@ -61,11 +61,11 @@ fun LibraryScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 DropdownPill(
                     Ic.Filter, filterLabel(state.filter),
-                    StatusFilter.entries.map { it to filterLabel(it) }, state.filter, onFilter,
+                    StatusFilter.entries.filter { it != StatusFilter.FAVORITES }.map { it to filterLabel(it) }, state.filter, onFilter,
                 )
                 DropdownPill(
                     Ic.Sort, sortLabel(state.sort),
-                    SortMode.entries.map { it to sortLabel(it) }, state.sort, onSort,
+                    SortMode.entries.filter { it != SortMode.FAVORITES }.map { it to sortLabel(it) }, state.sort, onSort,
                 )
             }
         }

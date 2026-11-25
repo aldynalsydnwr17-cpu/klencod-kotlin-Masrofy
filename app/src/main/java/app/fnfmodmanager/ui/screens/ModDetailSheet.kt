@@ -30,8 +30,6 @@ fun ModDetailSheet(
     mod: ModInfo,
     gameVersion: String,
     onClose: () -> Unit,
-    onFavorite: () -> Unit,
-    onPreview: () -> Unit,
     onRepatch: () -> Unit,
     onDelete: () -> Unit,
     onChangeCover: () -> Unit,
@@ -50,13 +48,6 @@ fun ModDetailSheet(
                 style = MaterialTheme.typography.bodySmall, color = FnfColors.Muted, textAlign = TextAlign.Center,
             )
             Text(mod.folderName, style = MaterialTheme.typography.labelSmall, color = FnfColors.Muted)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SecondaryButton(stringResource(R.string.detail_preview), onPreview, Modifier.weight(1f), icon = Ic.Play, height = 48.dp)
-                SecondaryButton(
-                    stringResource(if (mod.favorite) R.string.detail_unfavorite else R.string.detail_favorite), onFavorite,
-                    Modifier.weight(1f), icon = if (mod.favorite) Ic.StarFilled else Ic.Star, height = 48.dp,
-                )
-            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SecondaryButton(stringResource(R.string.more_change_cover), onChangeCover, Modifier.weight(1f), icon = Ic.FolderPlus, height = 48.dp)
                 if (mod.customCover) SecondaryButton(stringResource(R.string.more_reset_cover), onResetCover, Modifier.weight(1f), icon = Ic.Refresh, height = 48.dp)

@@ -52,10 +52,10 @@ fun HomeScreen(state: UiState, player: PreviewPlayer.State, actions: HomeActions
     ) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconTile(Ic.Settings, actions.onSettings, stringResource(R.string.tab_settings))
-                Spacer(Modifier.width(10.dp))
-                IconTile(Ic.Bell, actions.onBell, stringResource(R.string.cd_activity), badge = state.unread)
                 FnfLogo(Modifier.weight(1f).height(56.dp))
+                IconTile(Ic.Bell, actions.onBell, stringResource(R.string.cd_activity), badge = state.unread)
+                Spacer(Modifier.width(10.dp))
+                IconTile(Ic.Settings, actions.onSettings, stringResource(R.string.tab_settings))
             }
         }
         item {
@@ -71,15 +71,12 @@ fun HomeScreen(state: UiState, player: PreviewPlayer.State, actions: HomeActions
             )
         }
         item { ImportPanel(actions.onAddMod) }
-        if (player.loaded) {
-            item { MiniPlayer(player, actions.onTogglePlay, actions.onSeek, actions.onMute) }
-        }
-        item { SectionHeader(stringResource(R.string.home_installed), action = stringResource(R.string.home_see_all), onAction = actions.onSeeAll) }
+        item { SectionHeader(stringResource(R.string.home_installed), icon = Ic.Library, action = stringResource(R.string.home_see_all), onAction = actions.onSeeAll) }
         if (state.mods.isNotEmpty()) {
             item {
                 val recent = state.mods.sortedByDescending { it.lastModified }.take(8)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(recent, key = { it.folderName }) { m -> ModCard(m, modActions, Modifier.width(168.dp)) }
+                    items(recent, key = { it.folderName }) { m -> ModCard(m, modActions, Modifier.width(190.dp)) }
                 }
             }
         } else {

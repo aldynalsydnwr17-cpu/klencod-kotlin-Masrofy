@@ -171,4 +171,7 @@
     <string name="toast_permission_revoked">تم سحب صلاحية المجلد</string>
     <string name="log_cover_fmt">تم تغيير غلاف %1$s</string>
     <string name="log_permission_revoked">تم سحب صلاحية مجلد اللعبة</string>
+    <string name="home_version_fmt">الإصدار: v%1$s</string>
+    <string name="home_path_fmt">المسار: %1$s</string>
+    <string name="home_detected_ok">تم اكتشاف اللعبة بنجاح</string>
 </resources>

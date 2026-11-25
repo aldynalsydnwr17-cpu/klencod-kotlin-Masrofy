@@ -36,6 +36,7 @@ fun PrimaryButton(
     icon: IconPair? = null,
     enabled: Boolean = true,
     height: Dp = 54.dp,
+    compact: Boolean = false,
 ) {
     val corner = height * 0.27f
     val shape = RoundedCornerShape(corner)
@@ -69,17 +70,17 @@ fun PrimaryButton(
                     style = Stroke(w),
                 )
             }
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = if (compact) 6.dp else 16.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            FnfIcon(icon, size = 22.dp)
-            Spacer(Modifier.width(8.dp))
+            FnfIcon(icon, size = if (compact) 16.dp else 22.dp)
+            Spacer(Modifier.width(if (compact) 4.dp else 8.dp))
         }
         Text(
             text,
-            style = MaterialTheme.typography.labelLarge,
+            style = if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
             color = Color.White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

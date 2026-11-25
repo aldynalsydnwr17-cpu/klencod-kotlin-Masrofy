@@ -8,7 +8,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -21,8 +25,10 @@ import androidx.compose.ui.unit.sp
 
 /** Palette from the design brief plus the extra tones used by the SVG components. */
 object FnfColors {
-    val Background = Color(0xFF101014)
-    val Surface = Color(0xFF17151D)
+    /** Set from the Settings screen: pure black variant for OLED phones. */
+    var amoled by mutableStateOf(false)
+    val Background: Color get() = if (amoled) Color(0xFF000000) else Color(0xFF101014)
+    val Surface: Color get() = if (amoled) Color(0xFF0B0A0F) else Color(0xFF17151D)
     val Card = Color(0xFF25232B)
     val Accent = Color(0xFFF21D3D)
     val Text = Color(0xFFF5F5F7)
@@ -36,9 +42,10 @@ object FnfColors {
     val PlaceholderFill = Color(0xFF211D29)
 
     // status tones
-    val Success = Color(0xFF2ED573)
+    val Success = Color(0xFF35C96B)
     val Info = Color(0xFF3B82F6)
-    val Warning = Color(0xFFFFB020)
+    val Warning = Color(0xFFF4B740)
+    val Error = Color(0xFFFF5268)
 }
 
 /**
@@ -74,7 +81,8 @@ private fun fnfTypography(f: FontFamily) = Typography(
 )
 
 @Composable
-fun FnfTheme(content: @Composable () -> Unit) {
+fun FnfTheme(amoled: Boolean = false, content: @Composable () -> Unit) {
+    SideEffect { FnfColors.amoled = amoled }
     val context = LocalContext.current
     val typography = remember { fnfTypography(plexFamily(context)) }
     val scheme = darkColorScheme(

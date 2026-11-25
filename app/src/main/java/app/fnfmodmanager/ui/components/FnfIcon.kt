@@ -34,6 +34,9 @@ object Ic {
     val ChevronLeft = IconPair(R.drawable.ic_chevron_left_red, R.drawable.ic_chevron_left_white)
 
     // not in the ZIP: drawn in the same 24px / 1.8 stroke style (design/extra-icons)
+    val Library = IconPair(R.drawable.ic_library_red, R.drawable.ic_library_white)
+    val FileZip = IconPair(R.drawable.ic_file_zip_red, R.drawable.ic_file_zip_white)
+    val ImportFolder = IconPair(R.drawable.ic_import_folder_red, R.drawable.ic_import_folder_white)
     val Layers = IconPair(R.drawable.ic_layers_red, R.drawable.ic_layers_white)
     val Volume = IconPair(R.drawable.ic_volume_red, R.drawable.ic_volume_white)
     val VolumeOff = IconPair(R.drawable.ic_volume_off_red, R.drawable.ic_volume_off_white)

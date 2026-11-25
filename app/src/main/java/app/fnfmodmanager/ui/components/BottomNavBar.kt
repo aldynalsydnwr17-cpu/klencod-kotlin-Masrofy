@@ -24,8 +24,8 @@ import app.fnfmodmanager.ui.theme.FnfColors
 /** Declared in reading order for RTL: first = rightmost. */
 enum class Tab(val label: Int, val icon: IconPair) {
     HOME(R.string.tab_home, Ic.Home),
-    DISCOVER(R.string.tab_discover, Ic.Compass),
-    LIBRARY(R.string.tab_library, Ic.Layers),
+    LIBRARY(R.string.tab_library, Ic.Library),
+    IMPORT(R.string.tab_import, Ic.Download),
     SETTINGS(R.string.tab_settings, Ic.Settings),
 }
 

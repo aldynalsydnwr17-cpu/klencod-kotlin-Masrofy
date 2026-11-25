@@ -16,6 +16,10 @@ class Prefs(context: Context) {
         get() = sp.getString("mods_tree", null)
         set(v) = sp.edit().putString("mods_tree", v).apply()
 
+    var amoled: Boolean
+        get() = sp.getBoolean("amoled", false)
+        set(v) = sp.edit().putBoolean("amoled", v).apply()
+
     var installedByApp: Set<String>
         get() = HashSet(sp.getStringSet("installed", emptySet()) ?: emptySet())
         set(v) = sp.edit().putStringSet("installed", HashSet(v)).apply()

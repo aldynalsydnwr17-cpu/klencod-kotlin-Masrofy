@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.fnfmodmanager.R
+import app.fnfmodmanager.data.ConflictMode
 import app.fnfmodmanager.data.InstallPhase
 import app.fnfmodmanager.data.InstallUi
 import app.fnfmodmanager.ui.components.AngularButton
@@ -43,10 +44,14 @@ import androidx.compose.ui.text.input.KeyboardType
 fun InstallSheet(
     ui: InstallUi?,
     showChooser: Boolean,
+    hasFolder: Boolean,
+    folderPath: String,
     gameVersion: String,
+    detectedVersion: String?,
+    onChooseFolder: () -> Unit,
     onPickZip: () -> Unit,
     onPickFolder: () -> Unit,
-    onConfirm: (String) -> Unit,
+    onConfirm: (String, ConflictMode) -> Unit,
     onBack: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -54,9 +59,9 @@ fun InstallSheet(
     val running = ui is InstallUi.Running || ui is InstallUi.Preparing
     FnfSheet(onDismiss = onClose, dismissible = !running) {
         when (ui) {
-            null -> Chooser(onPickZip, onPickFolder)
+            null -> Chooser(hasFolder, folderPath, onChooseFolder, onPickZip, onPickFolder)
             InstallUi.Preparing -> Working(stringResource(R.string.install_preparing), null, 0f)
-            is InstallUi.Ready -> Ready(ui, gameVersion, onConfirm, onClose)
+            is InstallUi.Ready -> Ready(ui, folderPath, gameVersion, detectedVersion, onConfirm, onClose)
             is InstallUi.Running -> {
                 val frac = if (ui.bytesTotal > 0) ui.bytesDone.toFloat() / ui.bytesTotal else 0f
                 val phase = when (ui.phase) {
@@ -74,20 +79,40 @@ fun InstallSheet(
 }
 
 @Composable
-private fun Chooser(onPickZip: () -> Unit, onPickFolder: () -> Unit) {
+private fun Chooser(hasFolder: Boolean, folderPath: String, onChooseFolder: () -> Unit, onPickZip: () -> Unit, onPickFolder: () -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.home_add_mod), style = MaterialTheme.typography.titleMedium, color = FnfColors.Text)
-        Text(stringResource(R.string.chooser_body), style = MaterialTheme.typography.bodyMedium, color = FnfColors.Muted)
-        PrimaryButton(stringResource(R.string.chooser_zip), onPickZip, Modifier.fillMaxWidth(), icon = Ic.Download)
-        SecondaryButton(stringResource(R.string.chooser_folder), onPickFolder, Modifier.fillMaxWidth(), icon = Ic.Folder)
+        if (!hasFolder) {
+            Text(stringResource(R.string.chooser_need_folder), style = MaterialTheme.typography.bodyMedium, color = FnfColors.Muted)
+            PrimaryButton(stringResource(R.string.home_choose_folder), onChooseFolder, Modifier.fillMaxWidth(), icon = Ic.Folder)
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FnfIcon(Ic.Check, size = 20.dp, tint = FnfColors.Success)
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.chooser_folder_ok_fmt, folderPath), style = MaterialTheme.typography.bodySmall, color = FnfColors.Muted)
+            }
+            Text(stringResource(R.string.chooser_body), style = MaterialTheme.typography.bodyMedium, color = FnfColors.Muted)
+            PrimaryButton(stringResource(R.string.chooser_zip), onPickZip, Modifier.fillMaxWidth(), icon = Ic.FileZip)
+            SecondaryButton(stringResource(R.string.chooser_folder), onPickFolder, Modifier.fillMaxWidth(), icon = Ic.Folder)
+        }
     }
 }
 
+private fun sameMinor(a: String, b: String) = a.split('.').take(2) == b.split('.').take(2)
+
 @Composable
-private fun Ready(ui: InstallUi.Ready, gameVersion: String, onConfirm: (String) -> Unit, onClose: () -> Unit) {
+private fun Ready(
+    ui: InstallUi.Ready,
+    folderPath: String,
+    gameVersion: String,
+    detectedVersion: String?,
+    onConfirm: (String, ConflictMode) -> Unit,
+    onClose: () -> Unit,
+) {
     val p = ui.prepared
     val ctx = LocalContext.current
     var version by remember { mutableStateOf(gameVersion) }
+    val valid = Regex("^\\d+(\\.\\d+){1,3}$").matches(version.trim())
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         GlassCard(Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -103,12 +128,31 @@ private fun Ready(ui: InstallUi.Ready, gameVersion: String, onConfirm: (String) 
                 }
             }
         }
-        if (p.exists) Text(stringResource(R.string.install_exists_warning), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
+        Text(stringResource(R.string.install_target_fmt, folderPath.ifBlank { "—" }, p.folderName), style = MaterialTheme.typography.bodySmall, color = FnfColors.Muted)
         Text(stringResource(R.string.install_version_label), style = MaterialTheme.typography.labelMedium, color = FnfColors.Muted)
         FnfTextField(version, { version = it }, placeholder = "0.8.8", leading = Ic.Gamepad, keyboardType = KeyboardType.Decimal)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            AngularButton(stringResource(R.string.install_confirm), { onConfirm(version) }, Modifier.weight(1f), enabled = version.isNotBlank())
-            AngularButton(stringResource(R.string.cancel), onClose, Modifier.weight(1f), primary = false)
+        if (!valid && version.isNotBlank()) Text(stringResource(R.string.install_version_invalid), style = MaterialTheme.typography.bodySmall, color = FnfColors.Error)
+        // uncertain compatibility
+        val v = version.trim()
+        if (valid && (p.modApiVersion.isBlank() || !sameMinor(p.modApiVersion, v))) {
+            Text(
+                stringResource(R.string.install_compat_warning_fmt, p.modApiVersion.ifBlank { "—" }, v),
+                style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning,
+            )
+        }
+        if (detectedVersion != null && valid && detectedVersion != v) {
+            Text(stringResource(R.string.install_detected_mismatch_fmt, detectedVersion), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
+        }
+        if (p.exists) {
+            Text(stringResource(R.string.install_exists_warning), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
+            PrimaryButton(stringResource(R.string.install_as_copy), { onConfirm(v, ConflictMode.RENAME) }, Modifier.fillMaxWidth(), enabled = valid, height = 48.dp)
+            SecondaryButton(stringResource(R.string.install_replace), { onConfirm(v, ConflictMode.REPLACE) }, Modifier.fillMaxWidth(), enabled = valid, height = 48.dp)
+            AngularButton(stringResource(R.string.cancel), onClose, Modifier.fillMaxWidth(), primary = false)
+        } else {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                AngularButton(stringResource(R.string.install_confirm), { onConfirm(v, ConflictMode.NONE) }, Modifier.weight(1f), enabled = valid)
+                AngularButton(stringResource(R.string.cancel), onClose, Modifier.weight(1f), primary = false)
+            }
         }
     }
 }

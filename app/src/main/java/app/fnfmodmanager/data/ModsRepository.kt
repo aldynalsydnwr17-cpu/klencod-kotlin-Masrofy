@@ -8,6 +8,8 @@ import java.io.File
 class ModsRepository(private val context: Context, private val prefs: Prefs) {
     private val cr = context.contentResolver
     private val coversDir = File(context.filesDir, "covers").apply { mkdirs() }
+    private val manifests = ManifestStore(context)
+    private val customDir = File(context.filesDir, "covers_custom").apply { mkdirs() }
 
     /** Reads every folder inside mods/ and works out its status. Runs blocking SAF queries: call from IO. */
     fun scan(tree: Uri, gameVersion: String): List<ModInfo> {
@@ -26,7 +28,8 @@ class ModsRepository(private val context: Context, private val prefs: Prefs) {
         val kids = fs.children(dir.uri)
         val meta = kids.firstOrNull { it.name == META_NAME }
         val icon = kids.firstOrNull { it.name == ICON_NAME }
-        val cover = icon?.takeIf { it.size != 0L }?.let { cacheCover(fs, dir.name, it) }
+        val custom = File(customDir, dir.name).takeIf { it.exists() && it.length() > 0 }
+        val cover = custom ?: icon?.takeIf { it.size != 0L }?.let { cacheCover(fs, dir.name, it) }
 
         var title = dir.name
         var author = ""
@@ -58,8 +61,23 @@ class ModsRepository(private val context: Context, private val prefs: Prefs) {
                 }
             }
         }
-        return ModInfo(dir.name, dir.uri, title, author, desc, modVersion, api, status, detail, cover, dir.modified, dir.name in favorites)
+        return ModInfo(dir.name, dir.uri, title, author, desc, modVersion, api, status, detail, cover, dir.modified, dir.name in favorites, customCover = custom != null, managed = manifests.exists(dir.name))
     }
+
+    /**
+     * Cover chosen by the user: the picked image is stored untouched in the app's own storage (the mod's files are not
+     * modified). Returns false when the file is not a readable image.
+     */
+    fun setCustomCover(folder: String, uri: Uri): Boolean = runCatching {
+        val bytes = cr.openInputStream(uri)!!.use { it.readBytes() }
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return false
+        File(customDir, folder).writeBytes(bytes)
+        true
+    }.getOrDefault(false)
+
+    fun clearCustomCover(folder: String) { File(customDir, folder).delete() }
 
     /** Byte-for-byte copy of the mod's own icon, re-copied only when the size changes. Never re-encoded. */
     private fun cacheCover(fs: SafFs, folder: String, icon: SafFs.Child): File? = runCatching {
@@ -73,14 +91,12 @@ class ModsRepository(private val context: Context, private val prefs: Prefs) {
         return api.split('.').take(2) == game.split('.').take(2)
     }
 
-    fun delete(tree: Uri, mod: ModInfo): Boolean {
-        val ok = SafFs(cr, tree).delete(mod.docUri)
-        if (ok) {
-            File(coversDir, "${mod.folderName}.png").delete()
-            prefs.installedByApp = prefs.installedByApp - mod.folderName
-            prefs.favorites = prefs.favorites - mod.folderName
-        }
-        return ok
+    /** Drops the app's own records of a mod after it was removed from the mods folder. */
+    fun forget(mod: ModInfo) {
+        File(coversDir, "${mod.folderName}.png").delete()
+        File(customDir, mod.folderName).delete()
+        prefs.installedByApp = prefs.installedByApp - mod.folderName
+        prefs.favorites = prefs.favorites - mod.folderName
     }
 
     /** First instrumental found in songs/<song>/Inst*.ogg, as (song folder, file). */

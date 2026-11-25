@@ -33,6 +33,10 @@ data class ModInfo(
     val cover: File?,
     val lastModified: Long,
     val favorite: Boolean,
+    /** True when the cover is one the user picked by hand instead of the mod's own icon. */
+    val customCover: Boolean = false,
+    /** True when this app installed the mod and holds an install manifest for it (only those can be removed by the app). */
+    val managed: Boolean = false,
 )
 
 data class ActivityItem(val time: Long, val text: String, val ok: Boolean)
@@ -61,6 +65,20 @@ data class InstallResult(
     val oldApi: String,
     val newApi: String,
     val warnings: List<String>,
+)
+
+enum class ConflictMode { NONE, REPLACE, RENAME }
+
+class NotManagedException : Exception()
+
+data class UninstallResult(val deleted: Int, val left: Int, val removedFolder: Boolean)
+
+data class VerifyReport(
+    val title: String,
+    val managed: Boolean,
+    val checked: Int,
+    val issues: List<String>,
+    val notes: List<String>,
 )
 
 enum class InstallPhase { PREPARE, COPY, PATCH, VERIFY }
@@ -99,6 +117,12 @@ data class UiState(
     val showActivity: Boolean = false,
     val editVersion: Boolean = false,
     val confirmDelete: String? = null,
+    val gameInstalled: Boolean = false,
+    val gameInstalledVersion: String? = null,
+    val gamePath: String = "",
+    val amoled: Boolean = false,
+    val verify: VerifyReport? = null,
+    val verifying: Boolean = false,
 ) {
     val detail: ModInfo? get() = detailName?.let { n -> mods.firstOrNull { it.folderName == n } }
 

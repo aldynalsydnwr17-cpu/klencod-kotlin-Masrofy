@@ -34,6 +34,8 @@ fun ModDetailSheet(
     onPreview: () -> Unit,
     onRepatch: () -> Unit,
     onDelete: () -> Unit,
+    onChangeCover: () -> Unit,
+    onResetCover: () -> Unit,
 ) {
     FnfSheet(onDismiss = onClose) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -55,11 +57,15 @@ fun ModDetailSheet(
                     Modifier.weight(1f), icon = if (mod.favorite) Ic.StarFilled else Ic.Star, height = 48.dp,
                 )
             }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SecondaryButton(stringResource(R.string.more_change_cover), onChangeCover, Modifier.weight(1f), icon = Ic.FolderPlus, height = 48.dp)
+                if (mod.customCover) SecondaryButton(stringResource(R.string.more_reset_cover), onResetCover, Modifier.weight(1f), icon = Ic.Refresh, height = 48.dp)
+            }
             if (mod.status == ModStatus.INCOMPATIBLE) {
                 PrimaryButton(stringResource(R.string.detail_repatch_fmt, gameVersion), onRepatch, Modifier.fillMaxWidth(), icon = Ic.Refresh, height = 50.dp)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                AngularButton(stringResource(R.string.detail_delete), onDelete, Modifier.weight(1f), primary = false)
+                AngularButton(stringResource(R.string.more_uninstall), onDelete, Modifier.weight(1f), primary = false)
                 AngularButton(stringResource(R.string.close), onClose, Modifier.weight(1f))
             }
         }

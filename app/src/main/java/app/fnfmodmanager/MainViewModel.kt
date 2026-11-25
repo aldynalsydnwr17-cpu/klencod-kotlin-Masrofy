@@ -3,10 +3,14 @@ package app.fnfmodmanager
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.fnfmodmanager.data.ActivityItem
+import app.fnfmodmanager.data.ConflictMode
+import app.fnfmodmanager.data.NotManagedException
 import app.fnfmodmanager.data.InstallPhase
 import app.fnfmodmanager.data.InstallUi
 import app.fnfmodmanager.data.Installer
@@ -43,16 +47,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val playerState: StateFlow<PreviewPlayer.State> = player.state
 
     private val _ui = MutableStateFlow(
-        UiState(gameVersion = prefs.gameVersion, modsTree = restoreTree(), activity = prefs.activity),
+        UiState(gameVersion = prefs.gameVersion, modsTree = restoreTree(), activity = prefs.activity, amoled = prefs.amoled),
     )
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
     private var pending: ModSource? = null
     private var lastPrepared: PreparedMod? = null
 
+    private var coverTarget: String? = null
+
     init {
+        refreshGame()
         rescan()
     }
+
+    /** Looks at the phone: is the game installed, and which version does it report? */
+    fun refreshGame() {
+        val ver = runCatching {
+            ctx.packageManager.getPackageInfo(Prefs.GAME_PACKAGE, 0).versionName ?: ""
+        }.getOrNull()
+        _ui.update { it.copy(gameInstalled = ver != null, gameInstalledVersion = ver?.takeIf { v -> v.isNotBlank() }) }
+    }
+
+    private fun treePath(uri: Uri?): String = uri?.let {
+        runCatching { DocumentsContract.getTreeDocumentId(it) }.getOrNull()?.let { id -> Uri.decode(id) }
+    } ?: ""
 
     // ------------------------------------------------------------------ setup
     private fun restoreTree(): Uri? {
@@ -62,16 +81,72 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setModsTree(uri: Uri) {
+        viewModelScope.launch {
+            // Some folders (e.g. Android/data picked directly on Android 11+) cannot be read or written by apps.
+            val readable = withContext(Dispatchers.IO) { runCatching { SafFs(ctx.contentResolver, uri).children(SafFs(ctx.contentResolver, uri).rootDoc()); true }.getOrDefault(false) }
+            if (!readable) {
+                toast(ctx.getString(R.string.toast_folder_unsupported), ToastKind.ERROR)
+                return@launch
+            }
+            saveModsTree(uri)
+        }
+    }
+
+    private fun saveModsTree(uri: Uri) {
         runCatching {
             ctx.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         }
         prefs.modsTree = uri.toString()
-        _ui.update { it.copy(modsTree = uri) }
+        _ui.update { it.copy(modsTree = uri, gamePath = treePath(uri)) }
         toast(ctx.getString(R.string.toast_folder_saved))
         log(ctx.getString(R.string.log_folder_saved), true)
         rescan()
+    }
+
+    /** Forget the folder: releases the Android permission so the app can no longer touch it. */
+    fun revokeTree() {
+        val uri = _ui.value.modsTree ?: return
+        runCatching {
+            ctx.contentResolver.releasePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+        }
+        prefs.modsTree = null
+        _ui.update { it.copy(modsTree = null, mods = emptyList(), gamePath = "", modsPathLabel = "") }
+        toast(ctx.getString(R.string.toast_permission_revoked), ToastKind.INFO)
+        log(ctx.getString(R.string.log_permission_revoked), true)
+    }
+
+    fun setAmoled(on: Boolean) {
+        prefs.amoled = on
+        _ui.update { it.copy(amoled = on) }
+    }
+
+    fun startCoverPick(mod: ModInfo) { coverTarget = mod.folderName }
+
+    fun setCover(uri: Uri) {
+        val folder = coverTarget ?: return
+        coverTarget = null
+        viewModelScope.launch {
+            val ok = withContext(Dispatchers.IO) { repo.setCustomCover(folder, uri) }
+            if (ok) {
+                toast(ctx.getString(R.string.toast_cover_saved))
+                log(ctx.getString(R.string.log_cover_fmt, folder), true)
+                rescan()
+            } else {
+                toast(ctx.getString(R.string.toast_cover_invalid), ToastKind.ERROR)
+            }
+        }
+    }
+
+    fun resetCover(mod: ModInfo) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { repo.clearCustomCover(mod.folderName) }
+            toast(ctx.getString(R.string.toast_cover_reset), ToastKind.INFO)
+            rescan()
+        }
     }
 
     fun setGameVersion(version: String) {
@@ -93,7 +168,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val name = runCatching { SafFs(ctx.contentResolver, tree).rootName() }.getOrDefault("")
                 list to (if (name == "mods" || name.isEmpty()) "mods" else "$name / mods")
             }
-            _ui.update { it.copy(mods = mods, modsPathLabel = label, loading = false) }
+            _ui.update { it.copy(mods = mods, modsPathLabel = label, loading = false, gamePath = treePath(tree)) }
         }
     }
 
@@ -124,7 +199,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun confirmInstall(version: String) {
+    fun confirmInstall(version: String, mode: ConflictMode = ConflictMode.NONE) {
         val p = (_ui.value.install as? InstallUi.Ready)?.prepared ?: return
         val tree = _ui.value.modsTree
         if (tree == null) {
@@ -146,10 +221,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
             _ui.update { it.copy(install = running(InstallPhase.PREPARE, 0, 0L, "")) }
             try {
-                val result = installer.install(p, tree, v, p.exists) { phase, done, bytes, current ->
+                val result = installer.install(p, tree, v, mode) { phase, done, bytes, current ->
                     _ui.update { s -> if (s.install is InstallUi.Running) s.copy(install = running(phase, done, bytes, current)) else s }
                 }
-                prefs.installedByApp = prefs.installedByApp + p.folderName
+                prefs.installedByApp = prefs.installedByApp + result.folderName
                 log(ctx.getString(R.string.log_installed_fmt, result.title), true)
                 closePending()
                 _ui.update { it.copy(install = InstallUi.Done(result)) }
@@ -180,7 +255,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ------------------------------------------------------------------ mods
-    fun askDelete(mod: ModInfo) = _ui.update { it.copy(confirmDelete = mod.folderName) }
+    fun askDelete(mod: ModInfo) {
+        if (!mod.managed) {
+            // Only files recorded in this app's own install manifest may be removed.
+            toast(ctx.getString(R.string.toast_not_managed), ToastKind.INFO)
+            return
+        }
+        _ui.update { it.copy(confirmDelete = mod.folderName) }
+    }
+
+    fun verify(mod: ModInfo) {
+        val tree = _ui.value.modsTree ?: return
+        _ui.update { it.copy(verifying = true, verify = null) }
+        viewModelScope.launch {
+            val report = runCatching { installer.verify(tree, mod, _ui.value.gameVersion) }.getOrNull()
+            _ui.update { it.copy(verifying = false, verify = report) }
+            if (report == null) toast(ctx.getString(R.string.toast_error_generic), ToastKind.ERROR)
+        }
+    }
+
+    fun dismissVerify() = _ui.update { it.copy(verify = null, verifying = false) }
 
     fun cancelDelete() = _ui.update { it.copy(confirmDelete = null) }
 
@@ -191,9 +285,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _ui.update { it.copy(confirmDelete = null, detailName = null) }
         if (mod == null || tree == null) return
         viewModelScope.launch {
-            val ok = withContext(Dispatchers.IO) { runCatching { repo.delete(tree, mod) }.getOrDefault(false) }
-            if (ok) {
-                toast(ctx.getString(R.string.toast_deleted))
+            val res = try { installer.uninstall(tree, mod) } catch (e: NotManagedException) { null } catch (e: Exception) { null }
+            if (res != null) {
+                if (res.removedFolder) repo.forget(mod)
+                toast(
+                    if (res.removedFolder) ctx.getString(R.string.toast_deleted) else ctx.getString(R.string.toast_deleted_partial, res.left),
+                    if (res.removedFolder) ToastKind.SUCCESS else ToastKind.INFO,
+                )
                 log(ctx.getString(R.string.log_deleted_fmt, mod.title), true)
             } else {
                 toast(ctx.getString(R.string.toast_error_generic), ToastKind.ERROR)

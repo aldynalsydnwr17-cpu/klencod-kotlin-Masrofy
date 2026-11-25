@@ -38,7 +38,7 @@ fun StatusChip(
         ModStatus.INSTALLED -> { color = FnfColors.Success; icon = Ic.Check; labelRes = R.string.status_installed }
         ModStatus.COMPATIBLE -> { color = FnfColors.Info; icon = Ic.Info; labelRes = R.string.status_compatible }
         ModStatus.INCOMPATIBLE -> { color = FnfColors.Warning; icon = Ic.Alert; labelRes = R.string.status_incompatible }
-        ModStatus.ERROR -> { color = FnfColors.Accent; icon = Ic.X; labelRes = R.string.status_error }
+        ModStatus.ERROR -> { color = FnfColors.Error; icon = Ic.X; labelRes = R.string.status_error }
     }
     val label = stringResource(labelRes) + (count?.let { " $it" } ?: "")
     val shape = RoundedCornerShape(if (compact) 10.dp else 16.dp)

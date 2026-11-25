@@ -38,6 +38,7 @@ fun LibraryScreen(
     onFilter: (StatusFilter) -> Unit,
     onSort: (SortMode) -> Unit,
     onRefresh: () -> Unit,
+    onImport: () -> Unit,
     modActions: ModActions,
     modifier: Modifier = Modifier,
 ) {
@@ -70,7 +71,10 @@ fun LibraryScreen(
         }
         if (mods.isEmpty()) {
             item(span = { GridItemSpan(2) }) {
-                EmptyState(Ic.Layers, stringResource(R.string.library_empty_title), stringResource(R.string.library_empty_body))
+                EmptyState(
+                    Ic.Library, stringResource(R.string.library_empty_title), stringResource(R.string.library_empty_body),
+                    actionText = stringResource(R.string.import_cta), onAction = onImport,
+                )
             }
         } else {
             items(mods, key = { it.folderName }) { m -> ModCard(m, modActions) }

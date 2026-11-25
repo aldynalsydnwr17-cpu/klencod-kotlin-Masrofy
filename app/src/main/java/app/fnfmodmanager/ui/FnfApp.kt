@@ -22,7 +22,8 @@ import app.fnfmodmanager.ui.components.ModActions
 import app.fnfmodmanager.ui.components.Tab
 import app.fnfmodmanager.ui.screens.ActivitySheet
 import app.fnfmodmanager.ui.screens.DeleteConfirm
-import app.fnfmodmanager.ui.screens.DiscoverScreen
+import app.fnfmodmanager.ui.screens.ImportScreen
+import app.fnfmodmanager.ui.screens.VerifySheet
 import app.fnfmodmanager.ui.screens.HomeActions
 import app.fnfmodmanager.ui.screens.HomeScreen
 import app.fnfmodmanager.ui.screens.InstallSheet
@@ -31,7 +32,7 @@ import app.fnfmodmanager.ui.screens.ModDetailSheet
 import app.fnfmodmanager.ui.screens.SettingsScreen
 import app.fnfmodmanager.ui.screens.VersionEditor
 
-class Pickers(val zip: () -> Unit, val sourceFolder: () -> Unit, val modsFolder: () -> Unit)
+class Pickers(val zip: () -> Unit, val sourceFolder: () -> Unit, val modsFolder: () -> Unit, val cover: () -> Unit)
 
 @Composable
 fun FnfApp(vm: MainViewModel, pickers: Pickers) {
@@ -48,10 +49,19 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
         onDispose { view.keepScreenOn = false }
     }
 
-    val modActions = ModActions(vm::openDetail, vm::toggleFavorite, vm::preview)
+    val modActions = ModActions(
+        onOpen = vm::openDetail,
+        onFavorite = vm::toggleFavorite,
+        onPreview = vm::preview,
+        onLaunch = vm::launchGame,
+        onChangeCover = { vm.startCoverPick(it); pickers.cover() },
+        onResetCover = vm::resetCover,
+        onRepatch = vm::repatch,
+        onVerify = vm::verify,
+        onDelete = vm::askDelete,
+    )
     val home = HomeActions(
         onAddMod = { chooser = true },
-        onPickZip = pickers.zip,
         onChooseFolder = pickers.modsFolder,
         onEditVersion = { vm.editVersion(true) },
         onLaunch = vm::launchGame,
@@ -68,9 +78,12 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
             Box(Modifier.weight(1f)) {
                 when (tab) {
                     Tab.HOME -> HomeScreen(state, player, home, modActions)
-                    Tab.DISCOVER -> DiscoverScreen()
-                    Tab.LIBRARY -> LibraryScreen(state, vm::setQuery, vm::setFilter, vm::setSort, vm::rescan, modActions)
-                    Tab.SETTINGS -> SettingsScreen(state, pickers.modsFolder, onEditVersion = { vm.editVersion(true) })
+                    Tab.IMPORT -> ImportScreen(state, onImport = { chooser = true }, onChooseFolder = pickers.modsFolder)
+                    Tab.LIBRARY -> LibraryScreen(state, vm::setQuery, vm::setFilter, vm::setSort, vm::rescan, { chooser = true }, modActions)
+                    Tab.SETTINGS -> SettingsScreen(
+                        state, pickers.modsFolder, onEditVersion = { vm.editVersion(true) },
+                        onRevoke = vm::revokeTree, onAmoled = vm::setAmoled,
+                    )
                 }
             }
             BottomNavBar(tab, { tab = it })
@@ -79,7 +92,11 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
         InstallSheet(
             ui = state.install,
             showChooser = chooser,
+            hasFolder = state.modsTree != null,
+            folderPath = state.gamePath,
             gameVersion = state.gameVersion,
+            detectedVersion = state.gameInstalledVersion,
+            onChooseFolder = pickers.modsFolder,
             onPickZip = { chooser = false; pickers.zip() },
             onPickFolder = { chooser = false; pickers.sourceFolder() },
             onConfirm = vm::confirmInstall,
@@ -95,10 +112,13 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
                 onPreview = { vm.preview(m) },
                 onRepatch = { vm.repatch(m) },
                 onDelete = { vm.askDelete(m) },
+                onChangeCover = { vm.startCoverPick(m); pickers.cover() },
+                onResetCover = { vm.resetCover(m) },
             )
         }
         state.confirmDelete?.let { DeleteConfirm(it, vm::deleteConfirmed, vm::cancelDelete) }
-        if (state.editVersion) VersionEditor(state.gameVersion, vm::setGameVersion) { vm.editVersion(false) }
+        if (state.editVersion) VersionEditor(state.gameVersion, state.gameInstalledVersion, vm::setGameVersion) { vm.editVersion(false) }
+        VerifySheet(state.verifying, state.verify, vm::dismissVerify)
         if (state.showActivity) ActivitySheet(state.activity) { vm.showActivity(false) }
 
         FnfToastHost(state.toast, vm::clearToast)

@@ -28,6 +28,7 @@ object ModsLocator {
 
 class Installer(private val context: Context) {
     private val cr = context.contentResolver
+    private val manifests = ManifestStore(context)
 
     suspend fun prepare(src: ModSource, isZip: Boolean, modsTree: Uri?): PreparedMod = withContext(Dispatchers.IO) {
         val metaFile = src.files.first { it.path == META_NAME }
@@ -84,17 +85,26 @@ class Installer(private val context: Context) {
         p: PreparedMod,
         modsTree: Uri,
         gameVersion: String,
-        overwrite: Boolean,
+        mode: ConflictMode,
         onProgress: (InstallPhase, Int, Long, String) -> Unit,
     ): InstallResult = withContext(Dispatchers.IO) {
         val fs = SafFs(cr, modsTree)
         onProgress(InstallPhase.PREPARE, 0, 0L, "")
         val modsRoot = ModsLocator.ensure(fs)
-        fs.children(modsRoot).firstOrNull { it.name == p.folderName }?.let { old ->
-            if (!overwrite) throw IOException("في مود بنفس الاسم.")
-            if (!fs.delete(old.uri)) throw IOException("مقدرتش أمسح المود القديم.")
+        val existing = fs.children(modsRoot)
+        val folder = if (mode == ConflictMode.RENAME) {
+            var n = 2
+            while (existing.any { it.name == "${p.folderName}_$n" }) n++
+            "${p.folderName}_$n"
+        } else p.folderName
+        existing.firstOrNull { it.name == folder }?.let { old ->
+            // Never overwrite silently: the caller must have asked the user and passed REPLACE.
+            if (mode != ConflictMode.REPLACE) throw IOException("في مود بنفس الاسم، ولم يتم اختيار الاستبدال.")
+            backup(fs, old, folder)
+            if (!fs.delete(old.uri)) throw IOException("تعذّر حذف المود القديم بعد أخذ النسخة الاحتياطية.")
         }
-        val modDir = fs.mkdir(modsRoot, p.folderName) ?: throw IOException("مقدرتش أعمل فولدر المود.")
+        val modDir = fs.mkdir(modsRoot, folder) ?: throw IOException("تعذّر إنشاء مجلد المود.")
+        val written = ArrayList<ManifestStore.Entry>()
         var finished = false
         try {
             val warnings = ArrayList<String>()
@@ -145,6 +155,7 @@ class Installer(private val context: Context) {
                     val expected = if (f.size >= 0) f.size else written
                     if (st != null && st.name == name && st.size == expected) {
                         ok = true
+                        written += ManifestStore.Entry(f.path, expected)
                         break
                     }
                     fs.delete(uri)
@@ -166,6 +177,7 @@ class Installer(private val context: Context) {
             if (newApi != oldApi) obj.put("api_version", newApi)
             val bytes = obj.toString(2).replace("\\/", "/").toByteArray(Charsets.UTF_8)
             writeVerified(fs, modDir, META_NAME, bytes)
+            written += ManifestStore.Entry(META_NAME, bytes.size.toLong())
 
             // --- final check
             onProgress(InstallPhase.VERIFY, files.size, totalBytes, "")
@@ -175,13 +187,107 @@ class Installer(private val context: Context) {
 
             p.coverBytes?.let { b ->
                 val dir = File(context.filesDir, "covers").apply { mkdirs() }
-                File(dir, "${p.folderName}.png").writeBytes(b)
+                File(dir, "$folder.png").writeBytes(b)
             }
+            manifests.save(ManifestStore.Manifest(folder, p.title, System.currentTimeMillis(), written))
             finished = true
-            InstallResult(p.folderName, p.title, files.size - warnings.size, totalBytes, oldApi, newApi, warnings)
+            InstallResult(folder, p.title, files.size - warnings.size, totalBytes, oldApi, newApi, warnings)
         } finally {
             if (!finished) withContext(NonCancellable) { fs.delete(modDir) }
         }
+    }
+
+    /** Copies the folder that is about to be replaced into the app's private storage (latest backup per mod). */
+    private fun backup(fs: SafFs, old: SafFs.Child, folder: String) {
+        val target = File(context.filesDir, "backups/" + java.net.URLEncoder.encode(folder, "UTF-8"))
+        target.deleteRecursively()
+        fun copy(dir: Uri, to: File) {
+            to.mkdirs()
+            for (c in fs.children(dir)) {
+                if (c.isDir) copy(c.uri, File(to, c.name))
+                else fs.openIn(c.uri).use { input -> File(to, c.name).outputStream().use { input.copyTo(it) } }
+            }
+        }
+        try { copy(old.uri, target) } catch (e: Exception) {
+            target.deleteRecursively()
+            throw IOException("تعذّر أخذ نسخة احتياطية من المود القديم، لذلك لم يُستبدل.")
+        }
+    }
+
+    private fun walk(fs: SafFs, root: Uri, rel: String): Uri? {
+        var cur = root
+        for (part in rel.split('/').filter { it.isNotEmpty() }) {
+            cur = fs.children(cur).firstOrNull { it.isDir && it.name == part }?.uri ?: return null
+        }
+        return cur
+    }
+
+    /**
+     * Removes ONLY the files recorded in this app's manifest for the mod, then folders that became empty.
+     * A mod the app did not install has no manifest and is refused: nothing is deleted.
+     */
+    suspend fun uninstall(tree: Uri, mod: ModInfo): UninstallResult = withContext(Dispatchers.IO) {
+        val m = manifests.load(mod.folderName) ?: throw NotManagedException()
+        val fs = SafFs(cr, tree)
+        var deleted = 0
+        val dirs = LinkedHashSet<String>()
+        val listCache = HashMap<String, List<SafFs.Child>>()
+        for (e in m.files) {
+            val dirRel = e.path.substringBeforeLast('/', "")
+            val dirUri = walk(fs, mod.docUri, dirRel) ?: continue
+            val kids = listCache.getOrPut(dirRel) { fs.children(dirUri) }
+            val f = kids.firstOrNull { !it.isDir && it.name == e.path.substringAfterLast('/') } ?: continue
+            if (fs.delete(f.uri)) deleted++
+            var d = dirRel
+            while (d.isNotEmpty()) { dirs += d; d = d.substringBeforeLast('/', "") }
+        }
+        for (d in dirs.sortedByDescending { dd -> dd.count { it == '/' } }) {
+            val u = walk(fs, mod.docUri, d) ?: continue
+            if (fs.children(u).isEmpty()) fs.delete(u)
+        }
+        val left = fs.children(mod.docUri).size
+        var removed = false
+        if (left == 0 && fs.delete(mod.docUri)) {
+            removed = true
+            manifests.delete(mod.folderName)
+        }
+        UninstallResult(deleted, left, removed)
+    }
+
+    /** Checks the installed files against the manifest (exists, not 0 B, same size) and the metadata file. */
+    suspend fun verify(tree: Uri, mod: ModInfo, gameVersion: String): VerifyReport = withContext(Dispatchers.IO) {
+        val fs = SafFs(cr, tree)
+        val issues = ArrayList<String>()
+        val notes = ArrayList<String>()
+        val m = manifests.load(mod.folderName)
+        var checked = 0
+        if (m != null) {
+            val listCache = HashMap<String, List<SafFs.Child>>()
+            for (e in m.files) {
+                val dirRel = e.path.substringBeforeLast('/', "")
+                val dirUri = walk(fs, mod.docUri, dirRel)
+                val kids = dirUri?.let { u -> listCache.getOrPut(dirRel) { fs.children(u) } }
+                val f = kids?.firstOrNull { !it.isDir && it.name == e.path.substringAfterLast('/') }
+                checked++
+                when {
+                    f == null -> issues += "ملف ناقص: ${e.path}"
+                    f.size == 0L && e.size > 0L -> issues += "ملف فارغ (0 B): ${e.path}"
+                    f.size >= 0 && f.size != e.size -> issues += "حجم مختلف عن وقت التثبيت: ${e.path}"
+                }
+            }
+        } else {
+            notes += "هذا المود لم يُثبَّت بواسطة التطبيق، لذلك الفحص يشمل ملف البيانات فقط."
+            val kids = fs.children(mod.docUri)
+            checked = kids.size
+            kids.filter { !it.isDir && it.size == 0L }.forEach { issues += "ملف فارغ (0 B): ${it.name}" }
+        }
+        when (mod.status) {
+            ModStatus.ERROR -> issues += mod.statusDetail ?: "ملف _polymod_meta.json غير سليم."
+            ModStatus.INCOMPATIBLE -> notes += mod.statusDetail ?: "api_version لا يطابق إصدار اللعبة ($gameVersion)."
+            else -> {}
+        }
+        if (issues.isEmpty()) notes += "الملفات سليمة. هذا لا يضمن أن المود يعمل في إصدارك، لكنه يؤكد أن لا شيء ناقص أو فارغ."
+        VerifyReport(mod.title, m != null, checked, issues, notes)
     }
 
     /** Rewrites api_version inside an already installed mod. */

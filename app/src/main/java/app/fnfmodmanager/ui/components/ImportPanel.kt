@@ -44,22 +44,22 @@ fun ImportPanel(onPick: () -> Unit, modifier: Modifier = Modifier) {
             }
             .padding(18.dp),
     ) {
-        // faded_zip_mark.png from the replacement pack, already faded in the file itself
-        androidx.compose.foundation.Image(
-            androidx.compose.ui.res.painterResource(R.drawable.faded_zip_mark), null,
-            Modifier.align(Alignment.CenterStart).height(92.dp),
-            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-        )
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 FnfIcon(Ic.ImportFolder, size = 48.dp, red = true)
                 Spacer(Modifier.width(12.dp))
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.home_add_mod), style = MaterialTheme.typography.titleMedium, color = FnfColors.Text)
                     Text(stringResource(R.string.import_panel_sub), style = MaterialTheme.typography.bodySmall, color = FnfColors.Muted)
+                    Text(stringResource(R.string.import_panel_hint), style = MaterialTheme.typography.bodySmall, color = FnfColors.Muted)
                 }
+                // faded_zip_mark.png from the replacement pack (already faded in the file), kept beside the text so nothing overlaps
+                androidx.compose.foundation.Image(
+                    androidx.compose.ui.res.painterResource(R.drawable.faded_zip_mark), null,
+                    Modifier.padding(start = 8.dp).height(84.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                )
             }
-            Text(stringResource(R.string.import_panel_hint), style = MaterialTheme.typography.bodySmall, color = FnfColors.Muted)
             Spacer(Modifier.height(6.dp))
             PrimaryButton(stringResource(R.string.import_cta), onPick, Modifier.fillMaxWidth(), icon = Ic.Folder)
         }

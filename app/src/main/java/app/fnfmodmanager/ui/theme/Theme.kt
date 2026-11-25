@@ -56,7 +56,7 @@ private fun plexFamily(context: Context): FontFamily {
     )
     val fonts = weights.mapNotNull { (file, weight) ->
         val path = "fonts/IBMPlexSansArabic-$file.ttf"
-        if (has(path)) Font(am, path, weight) else null
+        if (has(path)) Font(path, am, weight) else null
     }
     return if (fonts.isEmpty()) FontFamily.Default else FontFamily(fonts)
 }

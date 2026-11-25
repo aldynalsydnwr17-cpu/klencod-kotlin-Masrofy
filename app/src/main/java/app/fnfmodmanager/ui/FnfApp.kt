@@ -70,7 +70,7 @@ fun FnfApp(vm: MainViewModel, pickers: Pickers) {
                     Tab.HOME -> HomeScreen(state, player, home, modActions)
                     Tab.DISCOVER -> DiscoverScreen()
                     Tab.LIBRARY -> LibraryScreen(state, vm::setQuery, vm::setFilter, vm::setSort, vm::rescan, modActions)
-                    Tab.SETTINGS -> SettingsScreen(state, pickers.modsFolder) { vm.editVersion(true) }
+                    Tab.SETTINGS -> SettingsScreen(state, pickers.modsFolder, onEditVersion = { vm.editVersion(true) })
                 }
             }
             BottomNavBar(tab, { tab = it })

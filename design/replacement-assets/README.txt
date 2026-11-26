@@ -1,0 +1,1 @@
+Replacement assets for Claude: transparent crown app logo, custom rhythm-game mascot, colorful FNF-style title logo, transparent red smoke/graffiti overlay, faded ZIP mark, and 3 generic DEMO covers. Covers are placeholders only; real imported mods should use their own detected or user-selected cover. Artwork is custom-inspired, not official game assets.

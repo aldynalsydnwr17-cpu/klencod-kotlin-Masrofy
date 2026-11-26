@@ -3,29 +3,58 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
-kotlin { jvmToolchain(17) }
+
 android {
-    namespace = "com.nour.fnfmodmanager"
-    compileSdk = 35
+    namespace = "app.fnfmodmanager"
+    compileSdk = 34
+
     defaultConfig {
-        applicationId = "com.nour.fnfmodmanager"
+        applicationId = "app.fnfmodmanager"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
     }
-    buildFeatures { compose = true }
+
+    signingConfigs {
+        create("fixed") {
+            storeFile = rootProject.file("signing/masrofy.keystore")
+            storeType = "pkcs12"
+            storePassword = "masrofy123"
+            keyAlias = "masrofy"
+            keyPassword = "masrofy123"
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("fixed")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    buildFeatures {
+        compose = true
+    }
+    packaging {
+        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
 }
+
 dependencies {
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.activity:activity-compose:1.10.0")
-    implementation(platform("androidx.compose:compose-bom:2025.01.00"))
+    implementation(platform("androidx.compose:compose-bom:2024.09.03"))
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.activity:activity-compose:1.9.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.documentfile:documentfile:1.0.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    debugImplementation("androidx.compose.ui:ui-tooling")
 }

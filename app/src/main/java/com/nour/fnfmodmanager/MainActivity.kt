@@ -101,7 +101,7 @@ fun ManagerApp(
                                     val clean=entry.name.replace("\\","/")
                                     if(!clean.startsWith("/") && !clean.split("/").any{it==".."} && !entry.isDirectory) {
                                         val parts=clean.split("/").filter{it.isNotBlank()}
-                                        var parent=dest
+                                        var parent: DocumentFile = dest
                                         for(part in parts.dropLast(1)) parent=parent.findFile(part) ?: parent.createDirectory(part) ?: parent
                                         val out=parent.createFile("application/octet-stream",parts.last())
                                         if(out!=null) context.contentResolver.openOutputStream(out.uri).use { os -> if(os!=null) zis.copyTo(os) }
@@ -111,7 +111,7 @@ fun ManagerApp(
                             }
                         } else {
                             val out=dest.createFile("application/octet-stream",fileName)
-                            if(out!=null) context.contentResolver.openOutputStream(out.uri).use { os -> if(os!=null) input.copyTo(os) }
+                            if(out!=null) context.contentResolver.openOutputStream(out.uri).use { os -> if(os!=null) input?.copyTo(os) }
                         }
                     }
                     val item=ModItem(safe,"1.0.0",gameVersion,safe)

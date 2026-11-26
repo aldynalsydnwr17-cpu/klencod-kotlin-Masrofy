@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+kotlin { jvmToolchain(17) }
 android {
     namespace = "com.nour.fnfmodmanager"
     compileSdk = 35

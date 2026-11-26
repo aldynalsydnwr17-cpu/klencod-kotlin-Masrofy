@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="fnf_background">#101014</color>
-    <color name="fnf_surface">#17151D</color>
-    <color name="fnf_card">#25232B</color>
-    <color name="fnf_accent">#F21D3D</color>
-    <color name="fnf_text">#F5F5F7</color>
-    <color name="ic_launcher_background">#101014</color>
-</resources>

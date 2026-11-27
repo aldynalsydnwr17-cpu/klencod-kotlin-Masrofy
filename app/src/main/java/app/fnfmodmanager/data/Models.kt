@@ -55,6 +55,7 @@ class PreparedMod(
     val exists: Boolean,
     val coverBytes: ByteArray?,
     val metaReadable: Boolean,
+    val conflicts: List<ModConflict> = emptyList(),
 )
 
 data class InstallResult(

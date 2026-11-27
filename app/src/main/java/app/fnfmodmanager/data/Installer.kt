@@ -72,6 +72,7 @@ class Installer(private val context: Context) {
             exists = exists,
             coverBytes = cover,
             metaReadable = readable,
+            conflicts = runCatching { ModScan.conflicts(src) }.getOrDefault(emptyList()),
         )
     }
 
@@ -86,6 +87,7 @@ class Installer(private val context: Context) {
         modsTree: Uri,
         gameVersion: String,
         mode: ConflictMode,
+        skipPaths: Set<String> = emptySet(),
         onProgress: (InstallPhase, Int, Long, String) -> Unit,
     ): InstallResult = withContext(Dispatchers.IO) {
         val fs = SafFs(cr, modsTree)
@@ -115,7 +117,10 @@ class Installer(private val context: Context) {
             }
 
             val files = p.source.files
-            val toCopy = files.filter { it.path != META_NAME }
+            val toCopy = files.filter { it.path != META_NAME && it.path !in skipPaths }
+            p.conflicts.filter { it.path in skipPaths }.forEach {
+                warnings += "اتخطّيت ${it.path} لأنه بيغيّر شخصية ${it.id} لنوع ${it.got} واللعبة محتاجة ${it.expected}، وده كان هيعمل Crash."
+            }
             val totalBytes = toCopy.sumOf { maxOf(it.size, 0L) }
             var bytesDone = 0L
             var lastEmit = 0L
@@ -191,7 +196,7 @@ class Installer(private val context: Context) {
             }
             manifests.save(ManifestStore.Manifest(folder, p.title, System.currentTimeMillis(), entries))
             finished = true
-            InstallResult(folder, p.title, files.size - warnings.size, totalBytes, oldApi, newApi, warnings)
+            InstallResult(folder, p.title, toCopy.size + 1 - warnings.count { it.startsWith("اتخطّيت الملف") }, totalBytes, oldApi, newApi, warnings)
         } finally {
             if (!finished) withContext(NonCancellable) { fs.delete(modDir) }
         }

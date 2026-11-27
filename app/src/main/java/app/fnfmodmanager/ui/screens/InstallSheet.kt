@@ -143,6 +143,12 @@ private fun Ready(
         if (detectedVersion != null && valid && detectedVersion != v) {
             Text(stringResource(R.string.install_detected_mismatch_fmt, detectedVersion), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
         }
+        if (p.conflicts.isNotEmpty()) {
+            Text(
+                stringResource(R.string.install_conflict_fmt, p.conflicts.joinToString("، ") { "${it.id} (${it.got}→${it.expected})" }),
+                style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning,
+            )
+        }
         if (p.exists) {
             Text(stringResource(R.string.install_exists_warning), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
             PrimaryButton(stringResource(R.string.install_as_copy), { onConfirm(v, ConflictMode.RENAME) }, Modifier.fillMaxWidth(), enabled = valid, height = 48.dp)

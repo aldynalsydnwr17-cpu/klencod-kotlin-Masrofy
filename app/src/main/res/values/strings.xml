@@ -63,6 +63,7 @@
     <string name="chooser_folder">مجلد مفكوك</string>
     <string name="install_preparing">جارٍ قراءة المود…</string>
     <string name="install_summary_fmt">%1$d ملف · %2$s</string>
+    <string name="install_conflict_fmt">⚠ المود ده بيستبدل شخصية أساسية في اللعبة بنوع رسم غير متوافق (%1$s)، وده بيعمل Crash أول ما تفتح اللعبة. هتخطّى الملفات دي أوتوماتيك وأثبّت باقي المود، يعني السكن مش هيتطبق على الشخصية دي.</string>
     <string name="install_exists_warning">يوجد مود بنفس الاسم في مجلد mods. لن يُستبدل شيء بدون موافقتك: ثبّته كنسخة جديدة، أو استبدله مع نسخة احتياطية من القديم.</string>
     <string name="install_version_label">إصدار اللعبة</string>
     <string name="install_confirm">تثبيت</string>

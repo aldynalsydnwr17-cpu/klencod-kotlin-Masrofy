@@ -221,7 +221,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
             _ui.update { it.copy(install = running(InstallPhase.PREPARE, 0, 0L, "")) }
             try {
-                val result = installer.install(p, tree, v, mode) { phase, done, bytes, current ->
+                val result = installer.install(p, tree, v, mode, p.conflicts.map { it.path }.toSet()) { phase, done, bytes, current ->
                     _ui.update { s -> if (s.install is InstallUi.Running) s.copy(install = running(phase, done, bytes, current)) else s }
                 }
                 prefs.installedByApp = prefs.installedByApp + result.folderName

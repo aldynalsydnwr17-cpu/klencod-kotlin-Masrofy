@@ -52,13 +52,19 @@ class Installer(private val context: Context) {
         val cover = src.files.firstOrNull { it.path == ICON_NAME }
             ?.let { f -> runCatching { src.open(f).use { it.readBytes() } }.getOrNull() }
         var exists = false
+        var installedNames: Set<String> = emptySet()
         if (modsTree != null) {
-            exists = runCatching {
+            runCatching {
                 val fs = SafFs(cr, modsTree)
                 val root = ModsLocator.find(fs)
-                root != null && fs.children(root).any { it.name == src.suggestedFolder }
-            }.getOrDefault(false)
+                if (root != null) {
+                    installedNames = fs.children(root).filter { it.isDir }.map { it.name }.toSet()
+                    exists = src.suggestedFolder in installedNames
+                }
+            }
         }
+        val others = runCatching { manifests.all().associate { m -> m.folder to m.files.map { it.path }.toSet() } }.getOrDefault(emptyMap())
+        val findings = runCatching { ModScan.analyze(context, src, installedNames, others, src.suggestedFolder) }.getOrDefault(emptyList())
         PreparedMod(
             source = src,
             sourceLabel = src.label,
@@ -72,7 +78,7 @@ class Installer(private val context: Context) {
             exists = exists,
             coverBytes = cover,
             metaReadable = readable,
-            conflicts = runCatching { ModScan.conflicts(src) }.getOrDefault(emptyList()),
+            findings = findings,
         )
     }
 
@@ -87,7 +93,6 @@ class Installer(private val context: Context) {
         modsTree: Uri,
         gameVersion: String,
         mode: ConflictMode,
-        skipPaths: Set<String> = emptySet(),
         onProgress: (InstallPhase, Int, Long, String) -> Unit,
     ): InstallResult = withContext(Dispatchers.IO) {
         val fs = SafFs(cr, modsTree)
@@ -117,10 +122,9 @@ class Installer(private val context: Context) {
             }
 
             val files = p.source.files
+            val skipPaths = p.findings.flatMap { it.skipPaths }.toSet()
             val toCopy = files.filter { it.path != META_NAME && it.path !in skipPaths }
-            p.conflicts.filter { it.path in skipPaths }.forEach {
-                warnings += "اتخطّيت ${it.path} لأنه بيغيّر شخصية ${it.id} لنوع ${it.got} واللعبة محتاجة ${it.expected}، وده كان هيعمل Crash."
-            }
+            p.findings.filter { it.skipPaths.isNotEmpty() }.forEach { warnings += it.text }
             val totalBytes = toCopy.sumOf { maxOf(it.size, 0L) }
             var bytesDone = 0L
             var lastEmit = 0L

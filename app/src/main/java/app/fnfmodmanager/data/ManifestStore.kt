@@ -34,5 +34,10 @@ class ManifestStore(context: Context) {
         )
     }.getOrNull()
 
+    /** Every manifest this app has written (used to find files that two mods both provide). */
+    fun all(): List<Manifest> = dir.listFiles()?.mapNotNull { f ->
+        runCatching { load(java.net.URLDecoder.decode(f.nameWithoutExtension, "UTF-8")) }.getOrNull()
+    } ?: emptyList()
+
     fun delete(folder: String) { file(folder).delete() }
 }

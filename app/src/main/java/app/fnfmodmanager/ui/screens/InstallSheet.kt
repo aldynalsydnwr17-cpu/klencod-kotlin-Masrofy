@@ -143,10 +143,11 @@ private fun Ready(
         if (detectedVersion != null && valid && detectedVersion != v) {
             Text(stringResource(R.string.install_detected_mismatch_fmt, detectedVersion), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
         }
-        if (p.conflicts.isNotEmpty()) {
+        p.findings.forEach {
             Text(
-                stringResource(R.string.install_conflict_fmt, p.conflicts.joinToString("، ") { "${it.id} (${it.got}→${it.expected})" }),
-                style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning,
+                (if (it.severity == app.fnfmodmanager.data.Severity.CRASH) "⛔ " else "⚠ ") + it.text,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (it.severity == app.fnfmodmanager.data.Severity.CRASH) FnfColors.Error else FnfColors.Warning,
             )
         }
         if (p.exists) {

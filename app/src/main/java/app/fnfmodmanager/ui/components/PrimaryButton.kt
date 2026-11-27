@@ -35,23 +35,23 @@ fun PrimaryButton(
     modifier: Modifier = Modifier,
     icon: IconPair? = null,
     enabled: Boolean = true,
-    height: Dp = 54.dp,
+    height: Dp = 52.dp,
     compact: Boolean = false,
 ) {
-    val corner = height * 0.27f
+    val corner = 12.dp
     val shape = RoundedCornerShape(corner)
     Row(
         modifier
             .height(height)
             .fnfClickable(enabled = enabled, onClick = onClick)
-            .shadow(14.dp, shape, ambientColor = FnfColors.Accent, spotColor = FnfColors.Accent)
+            .shadow(12.dp, shape, ambientColor = FnfColors.Accent.copy(alpha = 0.5f), spotColor = FnfColors.Accent.copy(alpha = 0.5f))
             .clip(shape)
             .drawBehind {
                 drawRect(
                     Brush.linearGradient(
-                        listOf(FnfColors.AccentHigh, FnfColors.AccentLow),
+                        listOf(FnfColors.Accent, Color(0xFFE0183A)),
                         start = Offset.Zero,
-                        end = Offset(size.width, size.height),
+                        end = Offset(0f, size.height),
                     ),
                 )
                 drawLine(
@@ -61,7 +61,7 @@ fun PrimaryButton(
                     strokeWidth = 2.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
-                val w = 1.2.dp.toPx()
+                val w = 1.5.dp.toPx()
                 drawRoundRect(
                     FnfColors.AccentEdge,
                     topLeft = Offset(w / 2, w / 2),

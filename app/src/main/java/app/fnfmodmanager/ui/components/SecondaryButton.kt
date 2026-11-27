@@ -34,10 +34,10 @@ fun SecondaryButton(
     modifier: Modifier = Modifier,
     icon: IconPair? = null,
     enabled: Boolean = true,
-    height: Dp = 54.dp,
+    height: Dp = 52.dp,
     compact: Boolean = false,
 ) {
-    val corner = height * 0.27f
+    val corner = 12.dp
     val shape = RoundedCornerShape(corner)
     Row(
         modifier
@@ -45,7 +45,7 @@ fun SecondaryButton(
             .fnfClickable(enabled = enabled, onClick = onClick)
             .clip(shape)
             .drawBehind {
-                drawRect(Brush.verticalGradient(listOf(Color(0xFF2A2830), Color(0xFF1B1920))))
+                drawRect(Brush.verticalGradient(listOf(Color(0xFF2A2830), Color(0xFF211F26))))
                 drawLine(
                     Color.White.copy(alpha = 0.10f),
                     Offset(size.width * 0.06f, 1.dp.toPx()),
@@ -53,9 +53,9 @@ fun SecondaryButton(
                     strokeWidth = 1.5.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
-                val w = 1.2.dp.toPx()
+                val w = 1.5.dp.toPx()
                 drawRoundRect(
-                    FnfColors.GlassStroke.copy(alpha = 0.9f),
+                    FnfColors.ButtonDarkEdge,
                     topLeft = Offset(w / 2, w / 2),
                     size = Size(size.width - w, size.height - w),
                     cornerRadius = CornerRadius(corner.toPx() - w / 2),

@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,8 +35,8 @@ fun IconTile(
             .size(size)
             .fnfClickable(onClick = onClick)
             .clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF2B2931), FnfColors.Card)))
-            .border(1.dp, FnfColors.GlassStroke.copy(alpha = 0.7f), shape)
+            .background(FnfColors.TileDark)
+            .border(1.dp, FnfColors.GlassStroke.copy(alpha = 0.55f), shape)
             .semantics { this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center,
     ) {

@@ -31,14 +31,16 @@ fun StatusChip(
     count: Int? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    val color: Color
+    val color: Color      // border and round badge
+    val fill: Color       // pill background
+    val textColor = FnfColors.Text
     val icon: IconPair
     val labelRes: Int
     when (status) {
-        ModStatus.INSTALLED -> { color = FnfColors.Success; icon = Ic.Check; labelRes = R.string.status_installed }
-        ModStatus.COMPATIBLE -> { color = FnfColors.Info; icon = Ic.Info; labelRes = R.string.status_compatible }
-        ModStatus.INCOMPATIBLE -> { color = FnfColors.Warning; icon = Ic.Alert; labelRes = R.string.status_incompatible }
-        ModStatus.ERROR -> { color = FnfColors.Error; icon = Ic.X; labelRes = R.string.status_error }
+        ModStatus.INSTALLED -> { color = FnfColors.Success; fill = Color(0xFF1F1D25); icon = Ic.Check; labelRes = R.string.status_installed }
+        ModStatus.COMPATIBLE -> { color = FnfColors.Success; fill = Color(0xFF0F4A25); icon = Ic.Check; labelRes = R.string.status_compatible }
+        ModStatus.INCOMPATIBLE -> { color = FnfColors.Accent; fill = Color(0xFF5A0F1E); icon = Ic.X; labelRes = R.string.status_incompatible }
+        ModStatus.ERROR -> { color = FnfColors.Accent; fill = Color(0xFF5A0F1E); icon = Ic.Alert; labelRes = R.string.status_error }
     }
     val label = stringResource(labelRes) + (count?.let { " $it" } ?: "")
     val shape = RoundedCornerShape(if (compact) 10.dp else 16.dp)
@@ -48,23 +50,19 @@ fun StatusChip(
     Row(
         base
             .clip(shape)
-            .background(color.copy(alpha = 0.14f))
-            .border(1.dp, color.copy(alpha = 0.5f), shape)
+            .background(fill)
+            .border(1.5.dp, color, shape)
             .padding(horizontal = if (compact) 6.dp else 12.dp, vertical = if (compact) 3.dp else 7.dp),
         horizontalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (status == ModStatus.INCOMPATIBLE) {
-            FnfIcon(icon, size = badge, tint = color)
-        } else {
-            Box(Modifier.size(badge).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
-                FnfIcon(icon, size = glyph, tint = Color.White)
-            }
+        Box(Modifier.size(badge).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
+            FnfIcon(icon, size = glyph, tint = Color.White)
         }
         Text(
             label,
             style = if (compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-            color = color,
+            color = textColor,
             maxLines = 1,
         )
     }

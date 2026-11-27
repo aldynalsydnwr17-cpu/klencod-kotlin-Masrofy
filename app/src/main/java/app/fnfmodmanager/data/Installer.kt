@@ -176,6 +176,14 @@ class Installer(private val context: Context) {
                 onProgress(InstallPhase.COPY, index + 1, bytesDone, f.path)
             }
 
+            // --- files the mod doctor adds (empty scripts that switch off a base-game character script)
+            for (path in p.findings.flatMap { it.inject }) {
+                val name = path.substringAfterLast('/')
+                writeVerified(fs, dirFor(path.substringBeforeLast('/', "")), name, ByteArray(0))
+                entries += ManifestStore.Entry(path, 0L)
+            }
+            p.findings.filter { it.inject.isNotEmpty() }.forEach { warnings += "🔧 " + it.text }
+
             // --- patch _polymod_meta.json (written last)
             onProgress(InstallPhase.PATCH, toCopy.size, totalBytes, META_NAME)
             val metaFile = files.first { it.path == META_NAME }

@@ -144,10 +144,15 @@ private fun Ready(
             Text(stringResource(R.string.install_detected_mismatch_fmt, detectedVersion), style = MaterialTheme.typography.bodySmall, color = FnfColors.Warning)
         }
         p.findings.forEach {
+            val sev = it.severity
             Text(
-                (if (it.severity == app.fnfmodmanager.data.Severity.CRASH) "⛔ " else "⚠ ") + it.text,
+                (if (sev == app.fnfmodmanager.data.Severity.CRASH) "⛔ " else if (sev == app.fnfmodmanager.data.Severity.FIX) "🔧 " else "⚠ ") + it.text,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (it.severity == app.fnfmodmanager.data.Severity.CRASH) FnfColors.Error else FnfColors.Warning,
+                color = when (sev) {
+                    app.fnfmodmanager.data.Severity.CRASH -> FnfColors.Error
+                    app.fnfmodmanager.data.Severity.FIX -> FnfColors.Success
+                    else -> FnfColors.Warning
+                },
             )
         }
         if (p.exists) {

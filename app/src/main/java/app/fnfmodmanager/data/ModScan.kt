@@ -3,15 +3,17 @@ package app.fnfmodmanager.data
 import android.content.Context
 import org.json.JSONObject
 
-enum class Severity { CRASH, WARN }
+enum class Severity { CRASH, WARN, FIX }
 
 /** One thing the pre-install check found. [skipPaths] are files the installer leaves out so the game does not crash. */
-data class Finding(val severity: Severity, val text: String, val skipPaths: List<String> = emptyList())
+data class Finding(val severity: Severity, val text: String, val skipPaths: List<String> = emptyList(), val inject: List<String> = emptyList())
 
 /**
  * Pre-install check ("mod doctor"). Rules:
  *  1. character JSON that is broken, or has an unknown renderType            -> CRASH, file skipped
- *  2. character JSON replacing a base character with another renderType      -> CRASH, file skipped
+ *  2. character JSON replacing a base character with another renderType      -> FIX: adds an EMPTY scripts/characters/<id>.hxc
+ *     (what working skin mods ship) so the game's own script for that character stops forcing its render type;
+ *     if the game has no such script, CRASH and the file is skipped
  *     (base renderTypes are read from the installed game; small built-in table as a fallback)
  *  3. other JSON files under data/ that is empty or not valid JSON                      -> WARN
  *  4. "dependencies" in _polymod_meta.json naming a mod that is not installed-> WARN
@@ -20,6 +22,7 @@ data class Finding(val severity: Severity, val text: String, val skipPaths: List
  */
 object ModScan {
     private val FALLBACK_BASE = mapOf("bf" to "multianimateatlas", "bf-christmas" to "multisparrow")
+    private val FALLBACK_SCRIPTS = setOf("bf", "bf-christmas")
     private val KNOWN_TYPES = setOf("sparrow", "multisparrow", "animateatlas", "multianimateatlas", "packer", "custom")
     private val CHAR = Regex("^data/characters/([^/]+)\\.json$")
 
@@ -36,7 +39,10 @@ object ModScan {
         ownFolder: String,
     ): List<Finding> {
         val out = ArrayList<Finding>()
-        val base = BaseGame.characterRenderTypes(context).ifEmpty { FALLBACK_BASE }
+        val game = BaseGame.characters(context)
+        val base = game.renderTypes.ifEmpty { FALLBACK_BASE }
+        val baseScripts = game.scripts.ifEmpty { FALLBACK_SCRIPTS }
+        val have = src.files.map { it.path }.toSet()
 
         // 1 + 2: characters
         for (f in src.files) {
@@ -54,11 +60,20 @@ object ModScan {
             }
             val expected = base[id]
             if (expected != null && got.isNotBlank() && !got.equals(expected, ignoreCase = true)) {
-                out += Finding(
-                    Severity.CRASH,
-                    "المود بيستبدل الشخصية الأساسية $id بنوع رسم ($got) واللعبة محتاجة ($expected)، وده بيعمل Crash. اتخطّيت ملفها وباقي المود هيتثبّت، يعني السكن مش هيظهر على الشخصية دي.",
-                    listOf(f.path),
-                )
+                val script = "scripts/characters/$id.hxc"
+                when {
+                    script in have -> Unit // the mod ships its own script (e.g. an empty one): the author already handled it
+                    id in baseScripts -> out += Finding(
+                        Severity.FIX,
+                        "المود بيستبدل الشخصية $id بنوع رسم ($got) واللعبة بتتوقع ($expected) وده كان هيعمل Crash. ضفت سكربت فاضي $script يوقف سكربت اللعبة الأصلي للشخصية دي (نفس حيلة مودات السكن اللي بتشتغل). مش مجرّب على جهازك، ولو لسه فيه Crash امسح المود.",
+                        inject = listOf(script),
+                    )
+                    else -> out += Finding(
+                        Severity.CRASH,
+                        "المود بيستبدل الشخصية $id بنوع رسم ($got) واللعبة محتاجة ($expected)، وده بيعمل Crash. اتخطّيت ملفها وباقي المود هيتثبّت، يعني السكن مش هيظهر على الشخصية دي.",
+                        listOf(f.path),
+                    )
+                }
             }
         }
 

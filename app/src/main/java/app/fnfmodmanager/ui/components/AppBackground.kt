@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -42,6 +45,12 @@ fun AppBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.(
         content = {
             // red smoke / graffiti overlay (transparent PNG), cropped not stretched, behind everything
             Image(painterResource(R.drawable.red_smoke_graffiti_overlay), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            // wide red smoke along the bottom edge, like the kit screens (transparent PNG, width-fitted)
+            Image(
+                painterResource(R.drawable.bg_smoke_bottom), null,
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().alpha(0.38f),
+                contentScale = ContentScale.FillWidth,
+            )
             content()
         },
     )

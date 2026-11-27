@@ -40,7 +40,7 @@ fun SettingsScreen(
         item {
             InfoCard(
                 Ic.Folder, stringResource(R.string.settings_folder_title),
-                if (state.modsTree == null) stringResource(R.string.settings_folder_none) else state.gamePath.ifBlank { stringResource(R.string.settings_folder_set) },
+                if (state.modsTree == null) stringResource(R.string.settings_folder_none) else state.gamePath.takeIf { it.isNotBlank() }?.let { "\u2066$it\u2069" } ?: stringResource(R.string.settings_folder_set),
                 onClick = onChooseFolder,
             )
         }

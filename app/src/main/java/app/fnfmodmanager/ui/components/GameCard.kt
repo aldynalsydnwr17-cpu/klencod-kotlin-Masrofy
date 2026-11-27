@@ -57,7 +57,7 @@ fun GameCard(
             Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(stringResource(R.string.home_game_title), style = MaterialTheme.typography.titleSmall, color = FnfColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 InfoLine(Ic.Gamepad, stringResource(R.string.home_version_fmt, gameVersion), onEditVersion)
-                InfoLine(Ic.Folder, stringResource(R.string.home_path_fmt, path.ifBlank { stringResource(R.string.home_path_none) }), onChoosePath)
+                InfoLine(Ic.Folder, stringResource(R.string.home_path_fmt, path.takeIf { it.isNotBlank() }?.let { "\u2066$it\u2069" } ?: stringResource(R.string.home_path_none)), onChoosePath)
                 val ok = installed && hasFolder
                 val msg = when {
                     !installed -> stringResource(R.string.home_not_detected)

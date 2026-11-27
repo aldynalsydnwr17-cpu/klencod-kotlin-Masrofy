@@ -23,7 +23,7 @@
     <string name="cd_refresh">تحديث</string>
 
     <!-- الرئيسية -->
-    <string name="home_game_title">Friday Night Funkin’</string>
+    <string name="home_game_title">⁦Friday Night Funkin’⁩</string>
     <string name="home_game_version_fmt">الإصدار: %1$s (اضغط للتعديل)</string>
     <string name="home_launch">تشغيل اللعبة</string>
     <string name="stat_total">كل المودات</string>

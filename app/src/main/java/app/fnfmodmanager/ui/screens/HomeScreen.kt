@@ -53,8 +53,8 @@ fun HomeScreen(state: UiState, player: PreviewPlayer.State, actions: HomeActions
     ) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                FnfMascot(Modifier.height(92.dp))
-                FnfLogo(Modifier.weight(1f).height(56.dp))
+                FnfMascot(Modifier.height(140.dp))
+                FnfLogo(Modifier.weight(1f).height(100.dp))
                 IconTile(Ic.Bell, actions.onBell, stringResource(R.string.cd_activity), badge = state.unread)
                 Spacer(Modifier.width(10.dp))
                 IconTile(Ic.Settings, actions.onSettings, stringResource(R.string.tab_settings))

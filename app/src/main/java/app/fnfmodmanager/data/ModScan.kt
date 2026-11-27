@@ -13,7 +13,7 @@ data class Finding(val severity: Severity, val text: String, val skipPaths: List
  *  1. character JSON that is broken, or has an unknown renderType            -> CRASH, file skipped
  *  2. character JSON replacing a base character with another renderType      -> CRASH, file skipped
  *     (base renderTypes are read from the installed game; small built-in table as a fallback)
- *  3. other data/*.json that is empty or not valid JSON                      -> WARN
+ *  3. other JSON files under data/ that is empty or not valid JSON                      -> WARN
  *  4. "dependencies" in _polymod_meta.json naming a mod that is not installed-> WARN
  *  5. Lua scripts (Psych Engine), which V-Slice does not run                 -> WARN
  *  6. files that another installed mod already provides                      -> WARN
